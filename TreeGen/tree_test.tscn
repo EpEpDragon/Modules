@@ -23,9 +23,9 @@ transform = Transform3D(0.847281, 0.394419, -0.355737, 0.000992626, 0.668577, 0.
 
 [node name="Tree" type="Node" parent="."]
 script = ExtResource( "3_dt4j7" )
-length = 0.2
+length = 0.02
 scale_factor = 0.97
-iterations = 4
+iterations = 8
 
 [node name="DebugDraw" parent="." instance=ExtResource( "3_elnj8" )]
 camera_path = NodePath("../Camera")

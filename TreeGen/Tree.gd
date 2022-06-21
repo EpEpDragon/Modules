@@ -2,9 +2,9 @@ extends Node
 var DebugDraw
 @export var length = 1.0
 @export var scale_factor = 0.6
-@export var angle = 22.5
+@export var angle = 60
 @export var iterations = 1
-@export var axiom = "FX"
+@export var axiom = "YF"
 @export_color_no_alpha var color = Color.WHITE
 @export var width = 5
 
@@ -14,7 +14,10 @@ var direction = Vector3.UP
 var stack = []
 var sequence = axiom
 #var map = {'X': ">[-FX]+FX"}
-var map = {'F': ">FF+[+F-F-F]-[-F+F+F]"}
+#var map = {'F': ">FF+[+F-F-F]-[-F+F+F]"}
+#var map = {'F': "FF", 'X': "F[+X]F[-X]+X"}
+var map = {'X': "YF+XF+Y", 'Y': "XF-YF-X"}
+
 var lines = []
 
 var move_draw = func():
@@ -52,13 +55,12 @@ var instruction_map = {
 
 func _ready():
 	DebugDraw = get_node("../DebugDraw")
-	print(DebugDraw)
 	grow()
 	construct()
 	DebugDraw.set_lines(lines)
-	print("Seq: " + str(sequence))
-	print("Pos: " + str(position))
-	print("Dir: " + str(direction))
+#	print("Seq: " + str(sequence))
+#	print("Pos: " + str(position))
+#	print("Dir: " + str(direction))
 
 
 # Grows the sequence up to interations specified
@@ -77,7 +79,7 @@ func construct():
 			var pos_prev = position
 			instruction_map[s].call()
 			if s == 'F':
-				lines.append({"Start":pos_prev, "End":position, "Color":Color(0,1-length,(1-length)/2), "Width":width*length})
+				lines.append({"Start":pos_prev, "End":position, "Color":Color(1+position.x/2,-position.x/5, position.y/4), "Width":width})
 
 # Evolves a symbol to the appropriate symbol/symbol sequence
 func evolve(s):

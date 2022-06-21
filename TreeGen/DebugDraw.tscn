@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://cxmhx7ooru1v7"]
+
+[ext_resource type="Script" path="res://DebugDraw.gd" id="1_80b7q"]
+
+[node name="Control" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource( "1_80b7q" )

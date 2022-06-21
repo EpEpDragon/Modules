@@ -1,0 +1,31 @@
+[gd_scene load_steps=5 format=3 uid="uid://dn1nk57bh8qgr"]
+
+[ext_resource type="Script" path="res://Camera3D.gd" id="1_70agf"]
+[ext_resource type="Script" path="res://Tree.gd" id="3_dt4j7"]
+[ext_resource type="PackedScene" uid="uid://cxmhx7ooru1v7" path="res://DebugDraw.tscn" id="3_elnj8"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_tls7a"]
+
+[node name="Node3D" type="Node3D"]
+
+[node name="Camera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5.99093)
+fov = 100.0
+script = ExtResource( "1_70agf" )
+movespeed = 3
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.5, -0.5)
+mesh = SubResource( "BoxMesh_tls7a" )
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.847281, 0.394419, -0.355737, 0.000992626, 0.668577, 0.743642, 0.531144, -0.630427, 0.566081, 0, 4.27844, 4.80873)
+
+[node name="Tree" type="Node" parent="."]
+script = ExtResource( "3_dt4j7" )
+length = 0.2
+scale_factor = 0.97
+iterations = 4
+
+[node name="DebugDraw" parent="." instance=ExtResource( "3_elnj8" )]
+camera_path = NodePath("../Camera")

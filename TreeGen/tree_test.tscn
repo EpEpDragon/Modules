@@ -30,8 +30,8 @@ transform = Transform3D(-0.812122, 0.434445, -0.389507, 0.577123, 0.499752, -0.6
 [node name="Tree" type="Node" parent="."]
 script = ExtResource( "3_dt4j7" )
 scale_factor = 0.855
-iterations = 7
-axiom = "a"
+iterations = 13
+axiom = "X"
 width = 2
 
 [node name="DebugDraw" parent="." instance=ExtResource( "3_elnj8" )]

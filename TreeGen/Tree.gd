@@ -5,12 +5,12 @@ extends Node
 @export var len_vari = 0.1
 @export var ang_vari = 0.5
 @export var branch_angle = 20
-@export var rot_angle = 123
+@export var rot_angle = 150
 @export var iterations = 1
 @export var axiom = ""
 #@export var map = {}
 #var map = {'a': ">[-Fa][+Fa]*[-Fa][+Fa]"}
-var map = {'a': ">~&@[+Fa]*~&@[+Fa]*~&@[+Fa]"}
+var map = {'X': ">Y*Y*Y*Y*Y", 'Y': "~&@[+FX]"}
 #var map = {'X': ">[-FX]+FX"}
 #var map = {'F': ">FF+[+F-F-F]-[-F+F+F]"}
 #var map = {'X': "YF+XF+Y", 'Y': "XF-YF-X"}

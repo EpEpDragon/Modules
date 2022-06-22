@@ -29,23 +29,19 @@ transform = Transform3D(-0.812122, 0.434445, -0.389507, 0.577123, 0.499752, -0.6
 
 [node name="Tree" type="Node" parent="."]
 script = ExtResource( "3_dt4j7" )
-length = 0.02
 scale_factor = 0.855
-iterations = 8
-axiom = "X"
-map = {
-"F": "FF",
-"X": "F[+X]F[-X]+X"
-}
+iterations = 7
+axiom = "a"
 width = 2
 
 [node name="DebugDraw" parent="." instance=ExtResource( "3_elnj8" )]
-visible = false
 camera_path = NodePath("../Camera")
 
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
 transform = Transform3D(42.9906, 0, 0, 0, 1, 0, 0, 0, 38.09, 0, 0, 0)
+visible = false
 mesh = SubResource( "PlaneMesh_j4kke" )
 
 [node name="Node3D" parent="." instance=ExtResource( "4_0nn8s" )]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0524, 0)
+visible = false

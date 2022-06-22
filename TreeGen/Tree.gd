@@ -1,11 +1,16 @@
 extends Node
 
 @export var length = 1.0
-@export var scale_factor = 0.6
-@export var angle = 20
+@export var scale_factor = 0.4
+@export var len_vari = 0.1
+@export var ang_vari = 0.5
+@export var branch_angle = 20
+@export var rot_angle = 123
 @export var iterations = 1
 @export var axiom = ""
-@export var map = {}
+#@export var map = {}
+#var map = {'a': ">[-Fa][+Fa]*[-Fa][+Fa]"}
+var map = {'a': ">~&@[+Fa]*~&@[+Fa]*~&@[+Fa]"}
 #var map = {'X': ">[-FX]+FX"}
 #var map = {'F': ">FF+[+F-F-F]-[-F+F+F]"}
 #var map = {'X': "YF+XF+Y", 'Y': "XF-YF-X"}
@@ -14,6 +19,7 @@ extends Node
 
 var position = Vector3.ZERO
 var direction = Vector3.UP
+var branch_normal = Vector3.FORWARD
 var stack = []
 var lines = []
 
@@ -27,19 +33,26 @@ var lines = []
 var move_draw = func():
 	position += direction * length
 
-var rotate_right = func():
-	direction = direction.rotated(Vector3(0,0,1), deg2rad(angle))
+var re_angle = func():
+	direction = direction.rotated(branch_normal, deg2rad(branch_angle))
 
-var rotate_left = func():
-	direction = direction.rotated(Vector3(0,0,1), -deg2rad(angle))
+var de_angle = func():
+	direction = direction.rotated(branch_normal, -deg2rad(branch_angle))
+
+var re_rotate = func():
+	branch_normal = branch_normal.rotated(direction, deg2rad(rot_angle))
+
+var de_rotate = func():
+	branch_normal = branch_normal.rotated(direction, -deg2rad(rot_angle))
 
 var push = func():
-	stack.append({"Position":position, "Direction":direction, "Length":length})
+	stack.append({"Position":position, "Direction":direction, "Branch_Normal":branch_normal, "Length":length})
 
 var pop = func():
 	var last = stack.size()-1
 	position = stack[last]["Position"]
 	direction = stack[last]["Direction"]
+	branch_normal = stack[last]["Branch_Normal"]
 	length = stack[last]["Length"]
 	stack.remove_at(last)
 
@@ -49,14 +62,33 @@ var mult_leng = func():
 var div_leng = func():
 	length /= scale_factor
 
+var var_leng = func():
+	length *= 1.0+(randf()-0.5)*2*len_vari
+#	length *= 1.0+(randf()-1.0)*2*len_vari
+
+var var_br_ang = func():
+	direction = direction.rotated(branch_normal, -deg2rad(branch_angle*(randf()-0.5)*2*ang_vari))
+
+var var_rot = func():
+	branch_normal = branch_normal.rotated(direction, deg2rad(rot_angle)*(randf()-0.5)*2*ang_vari)
+
+var var_wind = func():
+	pass
+
 var instruction_map = {
 				'F' : move_draw,
-				'+' : rotate_right,
-				'-' : rotate_left,
+				'+' : re_angle,
+				'-' : de_angle,
+				'*' : re_rotate,
+				'_' : de_rotate,
 				'[' : push,
 				']' : pop,
 				'>' : mult_leng,
-				'<' : div_leng}
+				'<' : div_leng,
+				'~' : var_leng,
+				'&' : var_br_ang,
+				'@' : var_rot,
+				'\\' : var_wind}
 #########################################
 #########################################
 
@@ -87,7 +119,8 @@ func construct():
 			var pos_prev = position
 			instruction_map[s].call()
 			if s == 'F':
-				lines.append({"Start":pos_prev, "End":position, "Color":Color(position.y/13,1-position.y/12, 0.5-position.x/2), "Width":width})
+#				lines.append({"Start":pos_prev, "End":position, "Color":Color(position.y/13,1-position.y/12, 0.5-position.x/2), "Width":width})
+				lines.append({"Start":pos_prev, "End":position, "Color":Color(0.5-position.x/4,position.y/5, 0.5-position.z/12), "Width":width})
 
 
 # Evolves a symbol to the appropriate symbol/symbol sequence

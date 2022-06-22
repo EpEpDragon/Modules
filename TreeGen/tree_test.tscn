@@ -30,12 +30,13 @@ transform = Transform3D(-0.812122, 0.434445, -0.389507, 0.577123, 0.499752, -0.6
 [node name="Tree" type="Node" parent="."]
 script = ExtResource( "3_dt4j7" )
 scale_factor = 0.855
-iterations = 13
+iterations = 12
 axiom = "X"
 width = 2
 
 [node name="DebugDraw" parent="." instance=ExtResource( "3_elnj8" )]
 camera_path = NodePath("../Camera")
+draw_fov = 45
 
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
 transform = Transform3D(42.9906, 0, 0, 0, 1, 0, 0, 0, 38.09, 0, 0, 0)

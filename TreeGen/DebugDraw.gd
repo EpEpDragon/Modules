@@ -30,7 +30,7 @@ func draw():
 	for l in _lines:
 		var look_dir = _camera.get_global_transform().basis.z
 		var cam_pos = _camera.position
-		if look_dir.angle_to(cam_pos-l["Start"]) < deg2rad(draw_fov) || look_dir.angle_to(cam_pos-l["End"]) < deg2rad(draw_fov):
+		if look_dir.angle_to(cam_pos-l["Start"]) < deg2rad(draw_fov) && look_dir.angle_to(cam_pos-l["End"]) < deg2rad(draw_fov):
 			var start = _camera.unproject_position(l["Start"])
 			var end = _camera.unproject_position(l["End"])
 			draw_line(start, end, l["Color"], l["Width"])

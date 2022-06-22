@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://bx50orhkeawwo"]
 
 [ext_resource type="Script" path="res://CSGCombiner3D.gd" id="1_4oeny"]
-[ext_resource type="ArrayMesh" path="res://test.mesh" id="2_yttg6"]
+[ext_resource type="ArrayMesh" uid="uid://x71q2lgwtcfj" path="res://test.mesh" id="2_yttg6"]
 
 [sub_resource type="Curve3D" id="Curve3D_oyhh0"]
 _data = {

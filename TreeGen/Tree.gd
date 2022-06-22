@@ -1,24 +1,28 @@
 extends Node
-var DebugDraw
+
 @export var length = 1.0
 @export var scale_factor = 0.6
-@export var angle = 60
+@export var angle = 20
 @export var iterations = 1
-@export var axiom = "YF"
+@export var axiom = ""
+@export var map = {}
+#var map = {'X': ">[-FX]+FX"}
+#var map = {'F': ">FF+[+F-F-F]-[-F+F+F]"}
+#var map = {'X': "YF+XF+Y", 'Y': "XF-YF-X"}
 @export_color_no_alpha var color = Color.WHITE
 @export var width = 5
 
-#var symbols = ['X', 'F', '+', '-', ]
 var position = Vector3.ZERO
 var direction = Vector3.UP
 var stack = []
-var sequence = axiom
-#var map = {'X': ">[-FX]+FX"}
-#var map = {'F': ">FF+[+F-F-F]-[-F+F+F]"}
-#var map = {'F': "FF", 'X': "F[+X]F[-X]+X"}
-var map = {'X': "YF+XF+Y", 'Y': "XF-YF-X"}
-
 var lines = []
+
+@onready var sequence = axiom
+@onready var DebugDraw = get_node("../DebugDraw")
+
+#########################################
+############## Instructions #############
+#########################################
 
 var move_draw = func():
 	position += direction * length
@@ -33,10 +37,11 @@ var push = func():
 	stack.append({"Position":position, "Direction":direction, "Length":length})
 
 var pop = func():
-	position = stack[stack.size()-1]["Position"]
-	direction = stack[stack.size()-1]["Direction"]
-	length = stack[stack.size()-1]["Length"]
-	stack.remove_at(stack.size()-1)
+	var last = stack.size()-1
+	position = stack[last]["Position"]
+	direction = stack[last]["Direction"]
+	length = stack[last]["Length"]
+	stack.remove_at(last)
 
 var mult_leng = func():
 	length *= scale_factor
@@ -52,15 +57,18 @@ var instruction_map = {
 				']' : pop,
 				'>' : mult_leng,
 				'<' : div_leng}
+#########################################
+#########################################
 
 func _ready():
-	DebugDraw = get_node("../DebugDraw")
+#	for n in range(iterations):
+#		lines.clear()
 	grow()
 	construct()
 	DebugDraw.set_lines(lines)
-#	print("Seq: " + str(sequence))
-#	print("Pos: " + str(position))
-#	print("Dir: " + str(direction))
+#		position = Vector3.ZERO
+#		direction = Vector3.UP
+#		await get_tree().create_timer(2).timeout
 
 
 # Grows the sequence up to interations specified
@@ -79,7 +87,8 @@ func construct():
 			var pos_prev = position
 			instruction_map[s].call()
 			if s == 'F':
-				lines.append({"Start":pos_prev, "End":position, "Color":Color(1+position.x/2,-position.x/5, position.y/4), "Width":width})
+				lines.append({"Start":pos_prev, "End":position, "Color":Color(position.y/13,1-position.y/12, 0.5-position.x/2), "Width":width})
+
 
 # Evolves a symbol to the appropriate symbol/symbol sequence
 func evolve(s):

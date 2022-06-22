@@ -1,0 +1,57 @@
+[gd_scene load_steps=5 format=3 uid="uid://bx50orhkeawwo"]
+
+[ext_resource type="Script" path="res://CSGCombiner3D.gd" id="1_4oeny"]
+[ext_resource type="ArrayMesh" path="res://test.mesh" id="2_yttg6"]
+
+[sub_resource type="Curve3D" id="Curve3D_oyhh0"]
+_data = {
+"points": PackedVector3Array(-0.164908, -0.393687, 0.87637, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.602, 0, -0.006, 0, 0, 0, -0.765323, 0.100211, -0.0239668, 1.357, 0, 0),
+"tilts": PackedFloat32Array(0, 0, 0)
+}
+point_count = 3
+
+[sub_resource type="Curve3D" id="Curve3D_fy873"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.602, 0, -0.006, 0, 0, 0, 0, 0, 0, 1.26095, -0.0733788, 0.496458),
+"tilts": PackedFloat32Array(0, 0, 0)
+}
+point_count = 3
+
+[node name="Node3D" type="Node3D"]
+
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.000602961, 0.000803381, -0.000387907)
+polygon = PackedVector2Array(-0.001, -0.098, -0.06, -0.055, -0.081, 0, -0.047, 0.054, 0, 0.09, 0.055, 0.062, 0.077, 0.001, 0.062, -0.064)
+mode = 2
+path_node = NodePath("Path3D")
+path_interval_type = 0
+path_interval = 0.2
+path_simplify_angle = 0.0
+path_rotation = 2
+path_local = false
+path_continuous_u = true
+path_u_distance = 1.0
+path_joined = false
+script = ExtResource( "1_4oeny" )
+
+[node name="Path3D" type="Path3D" parent="CSGPolygon3D"]
+curve = SubResource( "Curve3D_oyhh0" )
+
+[node name="CSGPolygon3D2" type="CSGPolygon3D" parent="CSGPolygon3D"]
+polygon = PackedVector2Array(-0.001, -0.098, -0.06, -0.055, -0.081, 0, -0.047, 0.054, 0, 0.09, 0.055, 0.062, 0.077, 0.001, 0.062, -0.064)
+mode = 2
+path_node = NodePath("Path3D")
+path_interval_type = 0
+path_interval = 0.2
+path_simplify_angle = 0.0
+path_rotation = 2
+path_local = false
+path_continuous_u = true
+path_u_distance = 1.0
+path_joined = false
+
+[node name="Path3D" type="Path3D" parent="CSGPolygon3D/CSGPolygon3D2"]
+curve = SubResource( "Curve3D_fy873" )
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = ExtResource( "2_yttg6" )

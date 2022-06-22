@@ -39,5 +39,6 @@ func handle_movement_rotate(event):
 	if event is InputEventMouseMotion:
 		rotate_y(-event.relative.x * 0.003 * mouse_sense)
 		var changev = -event.relative.y * 0.003 * mouse_sense
-		if rotation.x + changev < PI/2 && rotation.y + changev > -PI/2:
-			rotate_object_local(Vector3(1,0,0), changev)
+#		if rotation.x + changev < PI/2 && rotation.y + changev > -PI/2:
+		rotate_object_local(Vector3(1,0,0), changev)
+		rotation.x = clamp(rotation.x, -PI/2, PI/2)

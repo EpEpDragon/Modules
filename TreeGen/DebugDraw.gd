@@ -23,14 +23,18 @@ func _draw():
 #			var start = _camera.unproject_position(l["Start"])
 #			var end = _camera.unproject_position(l["End"])
 #			draw_line(start, end, l["Color"], l["Width"])
-	
+	var points:PackedVector2Array
 	for path in _paths:
-		var points:PackedVector2Array = []
+		points = []
 		for point in path.get_curve().get_baked_points():
 			points.append(_camera.unproject_position(point))
 			
 		draw_polyline(points, Color.WHITE, 5)
-
+	points = []
+	for point in _paths[3].get_curve().get_baked_points():
+		points.append(_camera.unproject_position(point))
+	print(_paths[3].get_curve().get_baked_points())
+	draw_polyline(points, Color.RED, 5)
 
 func add_line(start:Vector3, end:Vector3, color:Color, width:float):
 	_lines.append({"Start":start, "End":end, "Color":color, "Width":width})

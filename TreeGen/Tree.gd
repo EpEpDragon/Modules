@@ -14,7 +14,7 @@ extends Node
 #var map = {'X': ">[-FX]+FX"}
 #var map = {'F': ">FF+[+F-F-F]-[-F+F+F]"}
 #var map = {'X': "YF+XF+Y", 'Y': "XF-YF-X"}
-var map = {'X': "F>[~*+X]F[~/+X]"}
+var map = {'X': "F>[~*+FX]F[~/+FX]F"}
 @export_color_no_alpha var color = Color.WHITE
 @export var width = 5
 
@@ -23,11 +23,13 @@ var direction = Vector3.UP
 var branch_normal = Vector3.FORWARD
 var stack:Array[Dictionary] = []
 
-var lines:Array[Dictionary] = []
-var paths:Array[Path3D] = []
-
 @onready var sequence = axiom
 @onready var DebugDraw = get_node("../DebugDraw")
+
+#var lines:Array[Dictionary] = []
+var paths:Array[Path3D] = []
+var mesh_root:CSGCombiner3D
+#var mesh_full:Mesh
 
 ###############################################################################
 ################################# Instructions ################################
@@ -83,7 +85,8 @@ var pop = func():
 	paths.append(Path3D.new())
 	paths[current_branch].set_curve(Curve3D.new())
 	paths[current_branch].get_curve().add_point(pos_prev)
-	paths[current_branch].get_curve().add_point(position)
+	if pos_prev != position:
+		paths[current_branch].get_curve().add_point(position)
 
 # Multiply length by scale factor
 var mult_leng = func():
@@ -136,22 +139,25 @@ func _ready():
 #	for n in range(iterations):
 #		lines.clear()
 	grow()
-	construct()
+#	print(sequence)
+	construct_path()
+	construct_mesh()
 	DebugDraw.set_paths(paths)
 #	DebugDraw.set_lines(lines)
 
 
-# Grows the sequence up to interations specified
+# Grow the sequence up to interations specified
 func grow():
 	for n in range(iterations):
 		var sequence_temp = ""
 		for s in sequence:
 			sequence_temp += evolve(s)
 		sequence = sequence_temp
+	print(sequence)
 
 
-# Constructs the geometry based on current stored sequence
-func construct():
+# Construct the path based on current stored sequence
+func construct_path():
 	paths.append(Path3D.new())
 	paths[current_branch].set_curve(Curve3D.new())
 	paths[current_branch].get_curve().add_point(position)
@@ -159,6 +165,37 @@ func construct():
 	for s in sequence:
 		if instruction_map.has(s):
 			instruction_map[s].call()
+
+# Construct the mesh based on path 
+func construct_mesh():
+	var polygon = gen_circle(0.01,2)
+	mesh_root = CSGCombiner3D.new()
+	add_child(mesh_root)
+	var i = 1
+	for p in paths:
+		var mesh = CSGPolygon3D.new()
+		mesh.set_mode(CSGPolygon3D.MODE_PATH)
+#		mesh.set_path_interval_type(CSGPolygon3D.PATH_INTERVAL_SUBDIVIDE)
+		mesh.set_path_interval(0.1)
+		# HACK
+		# This should set the node directly but need to change source code to allow
+		add_child(p)
+		mesh.set_path_node(get_child(i).get_path())
+		mesh.set_polygon(polygon)
+		mesh_root.add_child(mesh)
+		i += 1
+
+
+func gen_circle(r:float, res:int):
+	var step = PI/2/res
+	var points:PackedVector2Array
+	
+	var angle = 0
+	for i in range(4*res):
+		points.append(r*Vector2(cos(angle),sin(angle)))
+		angle += step
+		
+	return points
 
 
 # Evolves a symbol to the appropriate symbol/symbol sequence

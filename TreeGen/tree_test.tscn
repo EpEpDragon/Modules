@@ -33,11 +33,12 @@ scale_factor = 0.62
 len_vari = 0.137
 branch_angle = 25
 rot_angle = 143
-iterations = 9
+iterations = 4
 axiom = "X"
 width = 2
 
 [node name="DebugDraw" parent="." instance=ExtResource( "3_elnj8" )]
+visible = false
 camera_path = NodePath("../Camera")
 draw_fov = 50
 
@@ -47,5 +48,4 @@ visible = false
 mesh = SubResource( "PlaneMesh_j4kke" )
 
 [node name="Node3D" parent="." instance=ExtResource( "4_0nn8s" )]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0524, 0)
 visible = false

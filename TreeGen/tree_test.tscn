@@ -33,7 +33,7 @@ scale_factor = 0.62
 len_vari = 0.137
 branch_angle = 25
 rot_angle = 143
-iterations = 13
+iterations = 9
 axiom = "X"
 width = 2
 

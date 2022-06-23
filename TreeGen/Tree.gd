@@ -9,7 +9,7 @@ extends Node
 @export var iterations = 1
 @export var axiom = ""
 #@export var map = {}
-#var map = {'a': ">~&@[-Fa][+Fa]*[-Fa][+Fa]"}
+#var map = {'X': ">~&@[-FX][+FX]*[-FX][+FX]"}
 #var map = {'X': ">Y*Y*Y*Y*Y", 'Y': "~&@[+FX]"}
 #var map = {'X': ">[-FX]+FX"}
 #var map = {'F': ">FF+[+F-F-F]-[-F+F+F]"}
@@ -29,21 +29,24 @@ var paths:Array[Path3D] = []
 @onready var sequence = axiom
 @onready var DebugDraw = get_node("../DebugDraw")
 
-#########################################
-############## Instructions #############
-#########################################
+###############################################################################
+################################# Instructions ################################
+###############################################################################
 
 # Used for path generation
 var pos_prev = position
 
 # Index of path being generated
-var current_path = 0
+var current_branch = 0
+
+# Top of stack
+var top = -1
 
 # Draw forward and save previous position
 var move_draw = func():
 	pos_prev = position
 	position += direction * length
-	lines.append({"Start":pos_prev, "End":position, "Color":Color(0.5-position.x/4,position.y/5, 0.5-position.z/12), "Width":width})
+	paths[current_branch].get_curve().add_point(position)
 
 # Rotate branch normal positive
 var re_angle = func():
@@ -63,20 +66,24 @@ var de_rotate = func():
 
 # Push current state, add path for branch
 var push = func():
-	paths.append(Path3D.new())
-	paths[paths.size()-1].set_curve(Curve3D.new())
-	paths[paths.size()-1].get_curve().add_point(pos_prev)
-	stack.append({"Position":position, "Direction":direction, "Branch_Normal":branch_normal, "Length":length})
+	stack.append({"Position":position, "Position_Previous":pos_prev, "Direction":direction, "Branch_Normal":branch_normal, "Length":length})
+	top += 1
 
-# Pop current state, increment current path index
+# Pop current state, terminate current path
 var pop = func():
-	var last = stack.size()-1
-	position = stack[last]["Position"]
-	direction = stack[last]["Direction"]
-	branch_normal = stack[last]["Branch_Normal"]
-	length = stack[last]["Length"]
-	stack.remove_at(last)
-	current_path += 1
+	position = stack[top]["Position"]
+	pos_prev = stack[top]["Position_Previous"]
+	direction = stack[top]["Direction"]
+	branch_normal = stack[top]["Branch_Normal"]
+	length = stack[top]["Length"]
+	stack.remove_at(top)
+	top -= 1
+	
+	current_branch += 1
+	paths.append(Path3D.new())
+	paths[current_branch].set_curve(Curve3D.new())
+	paths[current_branch].get_curve().add_point(pos_prev)
+	paths[current_branch].get_curve().add_point(position)
 
 # Multiply length by scale factor
 var mult_leng = func():
@@ -122,18 +129,16 @@ var instruction_map = {
 				'@' : var_rot,
 				'\\' : var_wind,
 				'#' : var_sun}
-#########################################
-#########################################
+###############################################################################
+###############################################################################
 
 func _ready():
 #	for n in range(iterations):
 #		lines.clear()
 	grow()
 	construct()
-	DebugDraw.set_lines(lines)
-#		position = Vector3.ZERO
-#		direction = Vector3.UP
-#		await get_tree().create_timer(2).timeout
+	DebugDraw.set_paths(paths)
+#	DebugDraw.set_lines(lines)
 
 
 # Grows the sequence up to interations specified
@@ -148,22 +153,13 @@ func grow():
 # Constructs the geometry based on current stored sequence
 func construct():
 	paths.append(Path3D.new())
-	new_curve(paths[current_path], pos_prev)
+	paths[current_branch].set_curve(Curve3D.new())
+	paths[current_branch].get_curve().add_point(position)
 	
 	for s in sequence:
 		if instruction_map.has(s):
-			var line_start = position
 			instruction_map[s].call()
-#			if s == '[':
-#				paths.append(Path3D.new())
-#				paths[paths.size()-1].get_curve().add_point(pos_prev)
-#			if s == 'F':
-##				lines.append({"Start":start, "End":position, "Color":Color(position.y/13,1-position.y/12, 0.5-position.x/2), "Width":width})
-#				lines.append({"Start":line_start, "End":position, "Color":Color(0.5-position.x/4,position.y/5, 0.5-position.z/12), "Width":width})
 
-func new_curve(path:Path3D, start:Vector3):
-	path.set_curve(Curve3D.new())
-	path.get_curve().add_point(start)
 
 # Evolves a symbol to the appropriate symbol/symbol sequence
 func evolve(s):

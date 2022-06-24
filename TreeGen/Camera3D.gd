@@ -1,6 +1,6 @@
 extends Camera3D
 
-@export var movespeed = 1
+@export var movespeed = 1.0
 @export var mouse_sense = 0.5
 
 var velocity = Vector3.ZERO

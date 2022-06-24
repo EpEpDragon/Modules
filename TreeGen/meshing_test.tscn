@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://bx50orhkeawwo"]
+[gd_scene load_steps=7 format=3 uid="uid://bx50orhkeawwo"]
 
 [ext_resource type="Script" path="res://meshing_test.gd" id="1_l5t8y"]
 [ext_resource type="Script" path="res://Camera3D.gd" id="2_15jvw"]
@@ -6,7 +6,22 @@
 
 [sub_resource type="Curve3D" id="Curve3D_eum13"]
 _data = {
-"points": PackedVector3Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0.00015759, -0.491902, 0, -0.00015759, 0.491902, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0.707, 1.707, 0),
+"points": PackedVector3Array(0, -0.5, 0, 0, 0.5, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, 0.707, 1.707, 0),
+"tilts": PackedFloat32Array(0, 0)
+}
+point_count = 2
+
+[sub_resource type="Curve3D" id="Curve3D_7gku2"]
+_data = {
+"points": PackedVector3Array(0, -0.5, 0, 0, 0.5, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, -0.707, 1.707, 0),
+"tilts": PackedFloat32Array(0, 0)
+}
+point_count = 2
+
+[sub_resource type="Curve3D" id="Curve3D_tsb62"]
+bake_interval = 0.05
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -0.5, 0, 0, 0.5, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0.464194, 0.8998, -0.950036),
 "tilts": PackedFloat32Array(0, 0, 0)
 }
 point_count = 3
@@ -21,6 +36,12 @@ movespeed = 1.659
 
 [node name="Path3D" type="Path3D" parent="."]
 curve = SubResource( "Curve3D_eum13" )
+
+[node name="Path3D2" type="Path3D" parent="."]
+curve = SubResource( "Curve3D_7gku2" )
+
+[node name="Path3D3" type="Path3D" parent="."]
+curve = SubResource( "Curve3D_tsb62" )
 
 [node name="DebugDraw" parent="." instance=ExtResource( "2_qd8g5" )]
 camera_path = NodePath("../Camera")

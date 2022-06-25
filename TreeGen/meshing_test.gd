@@ -37,15 +37,19 @@ func generate_portals(curves,r1,r2):
 				prev1 = points1[p1]
 				prev2 = points2[p2]
 				if is_touching(n_b,points1[p1],points2[p2],n1,n2,r1,r1):
-					pass
-#					debug_draw.add_packed(gen_circle(points1[p1], r1, n1,1), Color.RED)
-#					debug_draw.add_packed(gen_circle(points2[p2], r1, n2,1), Color.RED)
+#					pass
+					debug_draw.add_packed(gen_circle(points1[p1], r1, n1,1), Color.RED)
+					debug_draw.add_packed(gen_circle(points2[p2], r1, n2,1), Color.RED)
 				else:
+					
 					if portals[c1+1] == null || portals[c1+1][3] < p1:
 						portals[c1+1] = [points1[p1], r1, n1, p1]
 					if portals[c2+2+c1] == null || portals[c2+2+c1][3] < p2:
 						portals[c2+2+c1] = [points2[p2], r1, n2, p2]
-					break
+					debug_draw.add_packed(gen_circle(points1[p1], r1, n1,1), Color.GREEN)
+					debug_draw.add_packed(gen_circle(points2[p2], r1, n2,1), Color.GREEN)
+					
+				
 	return portals
 	
 func is_touching(n_b, p1, p2, n1, n2, r1, r2):
@@ -57,19 +61,15 @@ func is_touching(n_b, p1, p2, n1, n2, r1, r2):
 	
 	return x + y >= S
 
-
 func gen_circle(pos:Vector3, r:float, n:Vector3, res:int):
-	var phi = atan2(n.y,n.x)
-	var theta = atan2(sqrt(n.x*n.x + n.y*n.y) ,n.z)
+	var rot = 0
 	var step = PI/2/res
 	var points:PackedVector3Array
-	
-	var rot = 0
+	var point = (Vector3.UP).cross(n).cross(n)
+	if (point == Vector3.ZERO): point = r*Vector3.FORWARD #will need info to align this correctly
+	else: point *=  r/point.length()
 	for i in range(4*res):
-		var x = pos.x - r*(cos(rot)*sin(phi) + sin(rot)*cos(theta)*cos(phi))
-		var y = pos.y + r*(cos(rot)*cos(phi) - sin(rot)*cos(theta)*sin(phi))
-		var z = pos.z + r*sin(rot)*sin(theta)
-		points.append(Vector3(x,y,z))
-		rot += step
+		points.append(point.rotated(n, rot)+pos)
+		rot+=step
 	points.append(points[0])
 	return points

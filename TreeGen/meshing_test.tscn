@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://bx50orhkeawwo"]
+[gd_scene load_steps=8 format=3 uid="uid://bx50orhkeawwo"]
 
 [ext_resource type="Script" path="res://meshing_test.gd" id="1_l5t8y"]
 [ext_resource type="Script" path="res://Camera3D.gd" id="2_15jvw"]
@@ -6,21 +6,28 @@
 
 [sub_resource type="Curve3D" id="Curve3D_eum13"]
 _data = {
-"points": PackedVector3Array(0, -0.5, 0, 0, 0.5, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, 0.504192, 1.6292, -0.0231932),
+"points": PackedVector3Array(0, -0.5, 0, 0, 0.5, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, 1.03052, 1.51042, 0.210655),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_7gku2"]
 _data = {
-"points": PackedVector3Array(0, -0.5, 0, 0, 0.5, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, -0.380637, 1.54892, -0.285192),
+"points": PackedVector3Array(0, -0.5, 0, 0, 0.5, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, -0.618816, 1.74334, 0.314451),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_tsb62"]
 _data = {
-"points": PackedVector3Array(0, -0.5, 0, 0, 0.5, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, 0.123319, 1.39764, -0.358903),
+"points": PackedVector3Array(0, -0.5, 0, 0, 0.5, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, -0.458851, 1.8824, -0.754873),
+"tilts": PackedFloat32Array(0, 0)
+}
+point_count = 2
+
+[sub_resource type="Curve3D" id="Curve3D_lnyg2"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0.5, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, -0.252018, 1.66861, 1.25219),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -31,7 +38,7 @@ script = ExtResource( "1_l5t8y" )
 [node name="Camera" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.91891)
 script = ExtResource( "2_15jvw" )
-movespeed = 1.659
+movespeed = 0.796
 
 [node name="Path3D" type="Path3D" parent="."]
 curve = SubResource( "Curve3D_eum13" )
@@ -41,6 +48,9 @@ curve = SubResource( "Curve3D_7gku2" )
 
 [node name="Path3D3" type="Path3D" parent="."]
 curve = SubResource( "Curve3D_tsb62" )
+
+[node name="Path3D4" type="Path3D" parent="."]
+curve = SubResource( "Curve3D_lnyg2" )
 
 [node name="DebugDraw" parent="." instance=ExtResource( "2_qd8g5" )]
 camera_path = NodePath("../Camera")

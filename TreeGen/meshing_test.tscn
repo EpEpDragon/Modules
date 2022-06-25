@@ -6,25 +6,24 @@
 
 [sub_resource type="Curve3D" id="Curve3D_eum13"]
 _data = {
-"points": PackedVector3Array(0, -0.5, 0, 0, 0.5, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, 0.707, 1.707, 0),
+"points": PackedVector3Array(0, -0.5, 0, 0, 0.5, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, 0.504192, 1.6292, -0.0231932),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_7gku2"]
 _data = {
-"points": PackedVector3Array(0, -0.5, 0, 0, 0.5, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, -0.707, 1.707, 0),
+"points": PackedVector3Array(0, -0.5, 0, 0, 0.5, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, -0.380637, 1.54892, -0.285192),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_tsb62"]
-bake_interval = 0.05
 _data = {
-"points": PackedVector3Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -0.5, 0, 0, 0.5, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0.464194, 0.8998, -0.950036),
-"tilts": PackedFloat32Array(0, 0, 0)
+"points": PackedVector3Array(0, -0.5, 0, 0, 0.5, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, 0.123319, 1.39764, -0.358903),
+"tilts": PackedFloat32Array(0, 0)
 }
-point_count = 3
+point_count = 2
 
 [node name="Node3D" type="Node3D"]
 script = ExtResource( "1_l5t8y" )

@@ -19,11 +19,12 @@ func _process(delta):
 func _draw():
 	for l in _p:
 		var p_proj:PackedVector2Array
-		for point in l:
+		for point in l[0]:
 			p_proj.append(_camera.unproject_position(point))
 			
-		draw_polyline(p_proj,Color.WHITE)
+		draw_polyline(p_proj,l[1])
 	var zero = _camera.unproject_position(Vector3.ZERO)
+	
 	draw_line(zero,_camera.unproject_position(Vector3(1,0,0)),Color.RED)
 	draw_line(zero,_camera.unproject_position(Vector3(0,1,0)),Color.GREEN)
 	draw_line(zero,_camera.unproject_position(Vector3(0,0,1)),Color.BLUE)
@@ -57,8 +58,8 @@ func set_lines(lines):
 func set_packed(p):
 	_p = p
 
-func add_packed(p):
-	_p.append(p)
+func add_packed(p,c):
+	_p.append([p,c])
 
 func set_paths(paths):
 	_paths = paths

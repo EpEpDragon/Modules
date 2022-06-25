@@ -1,15 +1,22 @@
 extends Node3D
 
-@export var bake_interval = 0.01
+@export var bake_interval = 0.1
 var debug_draw
 
 func _ready():
 	debug_draw = $DebugDraw
 	var curves = [$Path3D.get_curve(), $Path3D2.get_curve(),$Path3D3.get_curve(),$Path3D4.get_curve()]
+	var portals = generate_portals(curves,0.1,0.1)
+	for p in portals:
+		if p != null:
+			debug_draw.add_packed(gen_circle(p[0], p[1], p[2],4),Color.GREEN)
+
+# Generates the tightest portals from given curves (Limited by bake interval)
+# return portals : [point, radius, normal, point index on curve]
+func generate_portals(curves,r1,r2):
 	for c in curves:
-		c.set_bake_interval(bake_interval)
+			c.set_bake_interval(bake_interval)
 		
-	var r1 = 0.1
 	var n_b = Vector3(0,1,0)
 	var portals = []
 	portals.resize(curves.size()+1)
@@ -18,9 +25,8 @@ func _ready():
 	
 	for c1 in range(curves.size()-1):
 		var points1 = curves[c1].get_baked_points()
-#		debug_draw.add_packed(gen_circle(points1[0], r1, n_b,5))
+
 		for c2 in range(curves.size()-1-c1):
-			print(str(c1) + ":" + str(c2+1+c1))
 			var points2 = curves[c2+1+c1].get_baked_points()
 			var prev1 = -n_b
 			var prev2 = -n_b
@@ -31,18 +37,17 @@ func _ready():
 				prev1 = points1[p1]
 				prev2 = points2[p2]
 				if is_touching(n_b,points1[p1],points2[p2],n1,n2,r1,r1):
-					debug_draw.add_packed(gen_circle(points1[p1], r1, n1,5), Color.RED)
-					debug_draw.add_packed(gen_circle(points2[p2], r1, n2,5), Color.RED)
+					pass
+#					debug_draw.add_packed(gen_circle(points1[p1], r1, n1,1), Color.RED)
+#					debug_draw.add_packed(gen_circle(points2[p2], r1, n2,1), Color.RED)
 				else:
 					if portals[c1+1] == null || portals[c1+1][3] < p1:
 						portals[c1+1] = [points1[p1], r1, n1, p1]
 					if portals[c2+2+c1] == null || portals[c2+2+c1][3] < p2:
 						portals[c2+2+c1] = [points2[p2], r1, n2, p2]
 					break
-	for p in portals:
-		if p != null:
-			debug_draw.add_packed(gen_circle(p[0], p[1], p[2],5),Color.GREEN)
-
+	return portals
+	
 func is_touching(n_b, p1, p2, n1, n2, r1, r2):
 	var S = p1.distance_to(p2)
 	var alpha1 = n1.angle_to(p2-p1) - PI/2

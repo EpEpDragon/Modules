@@ -1,8 +1,9 @@
-[gd_scene load_steps=8 format=3 uid="uid://bx50orhkeawwo"]
+[gd_scene load_steps=9 format=3 uid="uid://bx50orhkeawwo"]
 
 [ext_resource type="Script" path="res://meshing_test.gd" id="1_l5t8y"]
 [ext_resource type="Script" path="res://Camera3D.gd" id="2_15jvw"]
 [ext_resource type="PackedScene" uid="uid://cxmhx7ooru1v7" path="res://DebugDraw.tscn" id="2_qd8g5"]
+[ext_resource type="Script" path="res://MeshInstance3D.gd" id="4_mla1l"]
 
 [sub_resource type="Curve3D" id="Curve3D_eum13"]
 _data = {
@@ -36,7 +37,8 @@ point_count = 2
 script = ExtResource( "1_l5t8y" )
 
 [node name="Camera" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.91891)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.76837e-07, 1.37752, 1.40813)
+size = 2.0
 script = ExtResource( "2_15jvw" )
 movespeed = 0.796
 
@@ -54,3 +56,9 @@ curve = SubResource( "Curve3D_lnyg2" )
 
 [node name="DebugDraw" parent="." instance=ExtResource( "2_qd8g5" )]
 camera_path = NodePath("../Camera")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+script = ExtResource( "4_mla1l" )
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.282753, 2.44687, 7.47243)

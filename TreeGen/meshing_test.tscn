@@ -5,7 +5,7 @@
 
 [sub_resource type="Curve3D" id="Curve3D_eum13"]
 _data = {
-"points": PackedVector3Array(0, -0.5, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, -0.669736, 0.597713, -0.317717, -0.8913, 3.0946, -2.28853),
+"points": PackedVector3Array(0, -0.5, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, -0.669736, 0.597713, -0.317717, 0, 3.568, 0),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -33,6 +33,7 @@ point_count = 2
 
 [node name="Node3D" type="Node3D"]
 script = ExtResource( "1_l5t8y" )
+padding = 0.039
 
 [node name="Camera" type="Camera3D" parent="."]
 transform = Transform3D(0.854658, 0.0187987, 0.518851, 0, 0.999344, -0.0362076, -0.519191, 0.0309451, 0.854098, 1.56701, 0.859062, 1.88958)

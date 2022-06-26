@@ -3,6 +3,7 @@ extends Node3D
 @export var bake_interval = 0.01
 @export var padding = 0.00
 var debug_draw
+
 var circ_res = 120
 var point_cloud = DebugDraw2.new_point_cloud(Vector3.ZERO, 2, Color.GREEN)
 var color_arr = [Color.CYAN, Color.BLUE_VIOLET, Color.DARK_BLUE, Color.GREEN, Color.ORANGE_RED]

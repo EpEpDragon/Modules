@@ -89,7 +89,7 @@ func generate_cloud(curves,r):
 				if c_i1 != c_i2:
 					var s_pos2 = curves[c_i2].get_baked_points() # sphere points 2
 					var s_i2 = min(s_i1,s_pos2.size()-1)
-					for p_i in range(p1.size()-1):
+					for p_i in range(p1.size()):
 						if is_point_in_sphere(p1[p_i],s_pos2[s_i2],r+padding):
 							use_point[p_i] = false
 			for i in range(use_point.size()):
@@ -111,5 +111,5 @@ func gen_circle(pos:Vector3, r:float, n:Vector3, res:int):
 	for i in range(4*res):
 		points.append(point.rotated(n, rot)+pos)
 		rot+=step
-	points.append(points[0])
+#	points.append(points[0]) #this is only necessary to complete the circle if points are used to generate lines
 	return points

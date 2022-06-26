@@ -1,16 +1,20 @@
 extends Node3D
 
-@export var bake_interval = 0.1
+@export var bake_interval = 0.01
+@export var padding = 0.02
 var debug_draw
-var res = 1
+var res = 5
+var point_cloud = DebugDraw2.new_point_cloud(Vector3.ZERO, 5, Color.GREEN)
+
 
 func _ready():
-	debug_draw = $DebugDraw
-	var curves = [$Path3D.get_curve(), $Path3D2.get_curve(), $Path3D3.get_curve()]
-	var portals = generate_portals(curves,0.1,0.1)
-	for p in portals:
-		if p != null:
-			debug_draw.add_packed(gen_circle(p[0], p[1], p[2],res),Color.GREEN)
+	var curves = [$Path3D.get_curve(), $Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve()]
+#	var portals = generate_portals(curves,0.1,0.1)
+#	for p in portals:
+#		if p != null:
+#			point_cloud.add_point(gen_circle(p[0], p[1], p[2],res))
+	point_cloud.set_cloud(generate_cloud(curves,0.5))
+	point_cloud.construct()
 
 # Generates the tightest portals from given curves (Limited by bake interval)
 # return portals : [point, radius, normal, point index on curve]
@@ -39,16 +43,16 @@ func generate_portals(curves,r1,r2):
 				prev2 = points2[p2]
 				if is_touching(n_b,points1[p1],points2[p2],n1,n2,r1,r1):
 #					pass
-					debug_draw.add_packed(gen_circle(points1[p1], r1, n1,res), Color.RED)
-					debug_draw.add_packed(gen_circle(points2[p2], r1, n2,res), Color.RED)
+					point_cloud.add_point(gen_circle(points1[p1], r1, n1,res))
+					point_cloud.add_point(gen_circle(points2[p2], r1, n2,res))
 				else:
 					
 					if portals[c1+1] == null || portals[c1+1][3] < p1:
 						portals[c1+1] = [points1[p1], r1, n1, p1]
 					if portals[c2+2+c1] == null || portals[c2+2+c1][3] < p2:
 						portals[c2+2+c1] = [points2[p2], r1, n2, p2]
-#					debug_draw.add_packed(gen_circle(points1[p1], r1, n1,res), Color.GREEN)
-#					debug_draw.add_packed(gen_circle(points2[p2], r1, n2,res), Color.GREEN)
+#					point_cloud.add_point(gen_circle(points1[p1], r1, n1,res))
+#					point_cloud.add_point(gen_circle(points2[p2], r1, n2,res))
 					break
 					
 				
@@ -62,6 +66,40 @@ func is_touching(n_b, p1, p2, n1, n2, r1, r2):
 	var y = r2*cos(alpha2)
 	
 	return x + y >= S
+
+
+func generate_cloud(curves,r):
+	for c in curves:
+		c.set_bake_interval(bake_interval)
+	var cloud:PackedVector3Array
+	var n_b = Vector3(0,1,0)
+	for c_i1 in range(curves.size()):
+		print(range(curves.size()))
+		var s_pos1 = curves[c_i1].get_baked_points() # sphere points 1
+		var prev1 = -n_b
+		for s_i1 in range(s_pos1.size()):
+			var n1 = (s_pos1[s_i1] - prev1).normalized()
+			prev1 = s_pos1[s_i1]
+			var p1 = gen_circle(s_pos1[s_i1], r,n1,res)
+			var use_point = []
+			for i in p1:
+				use_point.push_back(true)
+				
+			for c_i2 in range(curves.size()):
+				if c_i1 != c_i2:
+					var s_pos2 = curves[c_i2].get_baked_points() # sphere points 2
+					var s_i2 = min(s_i1,s_pos2.size()-1)
+					for p_i in range(p1.size()-1):
+						if is_point_in_sphere(p1[p_i],s_pos2[s_i2],r+padding):
+							use_point[p_i] = false
+			for i in range(use_point.size()):
+				if use_point[i]:
+					cloud.push_back(p1[i])
+	return cloud
+
+func is_point_in_sphere(p_pos, s_pos, r):
+	return (p_pos - s_pos).length() < r
+
 
 func gen_circle(pos:Vector3, r:float, n:Vector3, res:int):
 	var rot = 0

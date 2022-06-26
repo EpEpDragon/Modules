@@ -8,12 +8,26 @@
 
 config_version=5
 
+_global_script_classes=[{
+"base": "Node3D",
+"class": &"DebugDraw",
+"language": &"GDScript",
+"path": "res://DebugDraw/DebugDrawNew.gd"
+}]
+_global_script_class_icons={
+"DebugDraw": ""
+}
+
 [application]
 
 config/name="Tree Gen"
 run/main_scene="res://meshing_test.tscn"
 config/features=PackedStringArray("4.0", "Vulkan Clustered")
 config/icon="res://icon.png"
+
+[autoload]
+
+DebugDraw2="*res://DebugDraw/DebugDraw2.tscn"
 
 [display]
 

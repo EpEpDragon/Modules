@@ -87,12 +87,12 @@ func generate_vertices(curves,r):
 					# Polygon construction possible checks
 					if i == 0:
 						if use_point[i+1] == true:
-							disc_points[i] = p1[i]
+							disc_points[i] = {"vertex":p1[i],"normal":p1[i]-s_pos1[s_i]}
 					elif i == use_point.size()-1:
 						if use_point[i-1] == true:
-							disc_points[i] = p1[i]
+							disc_points[i] = {"vertex":p1[i],"normal":p1[i]-s_pos1[s_i]}
 					elif use_point[i+1] == true || use_point[i-1] == true:
-						disc_points[i] = p1[i]
+						disc_points[i] = {"vertex":p1[i],"normal":p1[i]-s_pos1[s_i]}
 			# Add disc to current branch
 			branches[c_i1].append(disc_points)
 	return branches
@@ -111,18 +111,18 @@ func generate_mesh(curves):
 			var keys = branches[b_i][d_i].keys()
 			if keys.size() > 1:
 				mesh_imm.surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
-				mesh_imm.surface_set_normal(Vector3(0,0,1))
 				for k_i in range(keys.size()):
 					
 					# When strip ends prematurley end current strip and start another
 					if keys[k_i] - keys[k_i-1] > 1:
 						mesh_imm.surface_end()
 						mesh_imm.surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
-						mesh_imm.surface_set_normal(Vector3(0,0,1))
 						
 					# Connect current vertex to vertex in above disc
-					mesh_imm.surface_add_vertex(branches[b_i][d_i][keys[k_i]])
-					mesh_imm.surface_add_vertex(branches[b_i][d_i+1][keys[k_i]])
+					mesh_imm.surface_set_normal(branches[b_i][d_i][keys[k_i]]["normal"])
+					mesh_imm.surface_add_vertex(branches[b_i][d_i][keys[k_i]]["vertex"])
+					mesh_imm.surface_set_normal(branches[b_i][d_i][keys[k_i]]["normal"])
+					mesh_imm.surface_add_vertex(branches[b_i][d_i+1][keys[k_i]]["vertex"])
 				mesh_imm.surface_end()
 	mesh_inst.mesh = mesh_imm
 	ResourceSaver.save("res://TestMesh.tres", mesh_imm)

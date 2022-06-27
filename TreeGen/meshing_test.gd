@@ -32,14 +32,15 @@ func _ready():
 	var branches = generate_vertices(curves,0.5)
 #	print("branches: " + str(vertices.size()))
 	for b_i in range(branches.size()):
-		for disc in branches[b_i]:
+		for discs in branches[b_i]:
 #			print("discs: " + str(disc.size()))
-			for line in disc:
+			for line in discs:
 				if line.size() > 0:
 #					print("line: " + line.size())
 					var line_seg = DebugDraw2.new_line_seg(Vector3(0,0,0),color_arr[b_i])
-					line_seg.set_points(line[POS])
-					line_seg.construct()
+					for i in line.keys():
+						line_seg.add_point(line[i])
+						line_seg.construct()
 
 # Generates the tightest portals from given curves (Limited by bake interval)
 # return portals : [point, radius, normal, point index on curve]
@@ -179,7 +180,7 @@ func generate_vertices(curves,r):
 		var prev1 = -n_b
 		for s_i in range(s_pos1.size()):
 #			print(discs)
-			var line_points = [[],[]]
+			var line_points = {}
 			var n1 = (s_pos1[s_i] - prev1).normalized()
 			prev1 = s_pos1[s_i]
 			var p1 = gen_circle(s_pos1[s_i], r,n1,circ_res)
@@ -197,8 +198,7 @@ func generate_vertices(curves,r):
 				
 			for i in range(use_point.size()):
 				if use_point[i]:
-					line_points[POS].push_back(p1[i])
-					line_points[DISC_INDEX].push_back(i)
+					line_points[i] = p1[i]
 					if i == use_point.size()-1 :
 #						print(str(s_i) + ": " + str(line_points))
 						lines.append(line_points)
@@ -211,7 +211,7 @@ func generate_vertices(curves,r):
 #						var line_seg = DebugDraw2.new_line_seg(Vector3(0,0,5),color_arr[c_i1])
 #						line_seg.set_points(line_points)
 #						line_seg.construct()
-						line_points = [[],[]]
+						line_points = {}
 			if lines.size() > 0:
 #				print(str(s_i) + ": " + str(lines))
 				branches[c_i1].append(lines)
@@ -220,17 +220,17 @@ func generate_vertices(curves,r):
 	return branches
 
 
-func generate_mesh(lines):
+func generate_mesh(branches):
 	var mesh_imm = ImmediateMesh.new()
 	var mesh_inst = MeshInstance3D.new()
 	
-	for l_i in range(lines.size()-1):
+	for b_i in range(branches.size()-1):
 		mesh_imm.surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
 		mesh_imm.surface_set_normal(Vector3(0,0,1))
-		for p_i in range(lines[l_i].size()):
-			var p_i_next = min(p_i, lines[l_i+1].size()-1)
-			mesh_imm.surface_add_vertex(lines[l_i][p_i])
-			mesh_imm.surface_add_vertex(lines[l_i+1][p_i_next])
+		for d_i in range(branches[b_i].size()):
+			for p in branches[b_i][d_i]:
+				mesh_imm.surface_add_vertex(p[POS])
+#				mesh_imm.surface_add_vertex(lines[l_i+1][p_i_next])
 		mesh_imm.surface_end()
 
 

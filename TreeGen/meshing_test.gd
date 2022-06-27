@@ -4,7 +4,7 @@ extends Node3D
 @export var padding = 0.00
 var debug_draw
 
-var circ_res = 4
+var circ_res = 100
 var point_cloud = DebugDraw2.new_point_cloud(Vector3.ZERO, 2, Color.GREEN)
 var color_arr = [Color.RED, Color.GREEN, Color.BLUE, Color.CYAN, Color.ORANGE_RED]
 var line_segment = DebugDraw2.new_line_seg(Vector3(0,0,-5),Color.RED)
@@ -12,6 +12,7 @@ var line_segment = DebugDraw2.new_line_seg(Vector3(0,0,-5),Color.RED)
 
 func _ready():
 	var curves = [$Path3D.get_curve(), $Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve()]
+	generate_mesh(curves)
 #	var portals = generate_portals(curves,0.1,0.1)
 #	for p in portals:
 #		if p != null:
@@ -29,75 +30,123 @@ func _ready():
 #		line_seg.set_points(l)
 #		line_seg.construct()
 	
-	var branches = generate_vertices(curves,0.5)
-#	print(branches.size())
-#	for b in branches:
-#		print(b)
-#	print("branches: " + str(vertices.size()))
-	for b_i in range(branches.size()):
-		for disc in branches[b_i]:
-			var line_seg = DebugDraw2.new_line_seg(Vector3(0,0,0),color_arr[b_i])
-			var i_prev = disc.keys()[0]
-			for i in disc.keys():
-				if i - i_prev > 1:
-					line_seg.construct()
-					line_seg = DebugDraw2.new_line_seg(Vector3(0,0,0),color_arr[b_i])
-				line_seg.add_point(disc[i])
-				i_prev = i
-			line_seg.construct()
+#	var branches = generate_vertices(curves,0.5)
+#	for b_i in range(branches.size()):
+#		for disc in branches[b_i]:
+#			var line_seg = DebugDraw2.new_line_seg(Vector3(0,0,0),color_arr[b_i])
+#			var i_prev = disc.keys()[0]
+#			for i in disc.keys():
+#				if i - i_prev > 1:
+#					line_seg.construct()
+#					line_seg = DebugDraw2.new_line_seg(Vector3(0,0,0),color_arr[b_i])
+#				line_seg.add_point(disc[i])
+#				i_prev = i
+#			line_seg.construct()
 
-# Generates the tightest portals from given curves (Limited by bake interval)
-# return portals : [point, radius, normal, point index on curve]
-func generate_portals(curves,r1,r2):
+
+
+# Generate vertices from curves
+# return branches, contains vertex data ordered per branch per disc
+# Branches: Array of Discs on branch
+# Disc: Dict with key as vertex index on disc and value as position in 3D space
+func generate_vertices(curves,r):
 	for c in curves:
-			c.set_bake_interval(bake_interval)
-		
+		c.set_bake_interval(bake_interval)
+	
+	var branches = []
 	var n_b = Vector3(0,1,0)
-	var portals = []
-	portals.resize(curves.size()+1)
-	
-	portals[0] = [curves[0].get_baked_points()[0], r1, n_b, 0]
-	
-	for c1 in range(curves.size()-1):
-		var points1 = curves[c1].get_baked_points()
-
-		for c2 in range(curves.size()-1-c1):
-			var points2 = curves[c2+1+c1].get_baked_points()
-			var prev1 = -n_b
-			var prev2 = -n_b
-			for p1 in range(points1.size()):
-				var p2 = min(p1,points2.size()-1)
-				var n1 = (points1[p1] - prev1).normalized()
-				var n2 = (points2[p2] - prev2).normalized()
-				prev1 = points1[p1]
-				prev2 = points2[p2]
-				if is_touching(n_b,points1[p1],points2[p2],n1,n2,r1,r1):
-#					pass
-					point_cloud.add_point(gen_circle(points1[p1], r1, n1,circ_res))
-					point_cloud.add_point(gen_circle(points2[p2], r1, n2,circ_res))
-				else:
-					
-					if portals[c1+1] == null || portals[c1+1][3] < p1:
-						portals[c1+1] = [points1[p1], r1, n1, p1]
-					if portals[c2+2+c1] == null || portals[c2+2+c1][3] < p2:
-						portals[c2+2+c1] = [points2[p2], r1, n2, p2]
-#					point_cloud.add_point(gen_circle(points1[p1], r1, n1,circ_res))
-#					point_cloud.add_point(gen_circle(points2[p2], r1, n2,circ_res))
-					break
-					
+	# Loop through each curve
+	for c_i1 in range(curves.size()):
+		branches.push_back([])
+		var s_pos1 = curves[c_i1].get_baked_points() # sphere points 1
+		var prev1 = -n_b
+		# Loop through each baked point on curve, i.e. each disc
+		for s_i in range(s_pos1.size()):
+			var n1 = (s_pos1[s_i] - prev1).normalized() # Normal of current disc
+			prev1 = s_pos1[s_i] # Previous disc position, use to calc normal
+			var p1 = gen_circle(s_pos1[s_i], r,n1,circ_res) # Points on current disc
+			var use_point:Array[bool] = []
+			# Initialise flag array
+			for i in p1:
+				use_point.push_back(true)
 				
-	return portals
+			# Check, and flag, points on current disc against spheres on all other branches 
+			for c_i2 in range(curves.size()):
+				if c_i1 != c_i2:
+					var s_pos2 = curves[c_i2].get_baked_points() # sphere points 2
+					var s_i2 = min(s_i,s_pos2.size()-1)
+					for p_i in range(p1.size()):
+						if is_point_in_sphere(p1[p_i],s_pos2[s_i2],r+padding):
+							use_point[p_i] = false
+			
+			var disc_points = {} 
+			# Add points to disc based checks
+			for i in range(use_point.size()):
+				# Flag array check
+				if use_point[i]:
+					# Polygon construction possible checks
+					if i == 0:
+						if use_point[i+1] == true:
+							disc_points[i] = p1[i]
+					elif i == use_point.size()-1:
+						if use_point[i-1] == true:
+							disc_points[i] = p1[i]
+					elif use_point[i+1] == true || use_point[i-1] == true:
+						disc_points[i] = p1[i]
+			# Add disc to current branch
+			branches[c_i1].append(disc_points)
+	return branches
 
 
-func is_touching(n_b, p1, p2, n1, n2, r1, r2):
-	var S = p1.distance_to(p2)
-	var alpha1 = n1.angle_to(p2-p1) - PI/2
-	var alpha2 = n2.angle_to(p1-p2) - PI/2
-	var x = r1*cos(alpha1)
-	var y = r2*cos(alpha2)
+# Generate a mesh from the given curves
+func generate_mesh(curves):
+	# Get vertecices ordered by branch and disc
+	var branches = generate_vertices(curves,0.5)
+	var mesh_inst = MeshInstance3D.new()
+	var mesh_imm = ImmediateMesh.new()
 	
-	return x + y >= S
+	# Iterate adding vertices branch by branch creating strips from stacked discs
+	for b_i in range(branches.size()):
+		for d_i in range(branches[b_i].size()-1):
+			var keys = branches[b_i][d_i].keys()
+			if keys.size() > 1:
+				mesh_imm.surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
+				mesh_imm.surface_set_normal(Vector3(0,0,1))
+				for k_i in range(keys.size()):
+					
+					# When strip ends prematurley end current strip and start another
+					if keys[k_i] - keys[k_i-1] > 1:
+						mesh_imm.surface_end()
+						mesh_imm.surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
+						mesh_imm.surface_set_normal(Vector3(0,0,1))
+						
+					# Connect current vertex to vertex in above disc
+					mesh_imm.surface_add_vertex(branches[b_i][d_i][keys[k_i]])
+					mesh_imm.surface_add_vertex(branches[b_i][d_i+1][keys[k_i]])
+				mesh_imm.surface_end()
+	mesh_inst.mesh = mesh_imm
+	ResourceSaver.save("res://TestMesh.tres", mesh_imm)
+	add_child(mesh_inst)
 
+
+func is_point_in_sphere(p_pos, s_pos, r):
+	return (p_pos - s_pos).length() < r
+
+
+func gen_circle(pos:Vector3, r:float, n:Vector3, res:int):
+	var rot = 0
+	var step = PI/2/res
+	var points:PackedVector3Array = []
+	var point = (Vector3.UP).cross(n).cross(n)
+	if (point == Vector3.ZERO): point = r*Vector3.FORWARD #will need info to align this correctly
+	else: point *=  r/point.length()
+	for i in range(4*res):
+		points.append(point.rotated(n, rot)+pos)
+		rot+=step
+	points.append(points[0]) #this is only necessary to complete the circle if points are used to generate lines
+	return points
+
+####################################### Debug use functions ###################################
 
 func generate_cloud(curves,r):
 	for c in curves:
@@ -126,7 +175,6 @@ func generate_cloud(curves,r):
 				if use_point[i]:
 					cloud.push_back(p1[i])
 	return cloud
-
 
 func generate_line_segments(curves,r):
 	for c in curves:
@@ -167,94 +215,3 @@ func generate_line_segments(curves,r):
 						line_seg.construct()
 						line_points = []
 	return lines
-
-
-#enum {POS=0,DISC_INDEX=1} # Indices for lines
-func generate_vertices(curves,r):
-	for c in curves:
-		c.set_bake_interval(bake_interval)
-	
-	var branches = []
-#	var lines = []
-	
-	var n_b = Vector3(0,1,0)
-	for c_i1 in range(curves.size()):
-		branches.push_back([])
-		var s_pos1 = curves[c_i1].get_baked_points() # sphere points 1
-		var prev1 = -n_b
-		for s_i in range(s_pos1.size()):
-#			print(discs)
-			var disc_points = {}
-			var n1 = (s_pos1[s_i] - prev1).normalized()
-			prev1 = s_pos1[s_i]
-			var p1 = gen_circle(s_pos1[s_i], r,n1,circ_res)
-			var use_point = []
-			for i in p1:
-				use_point.push_back(true)
-				
-			for c_i2 in range(curves.size()):
-				if c_i1 != c_i2:
-					var s_pos2 = curves[c_i2].get_baked_points() # sphere points 2
-					var s_i2 = min(s_i,s_pos2.size()-1)
-					for p_i in range(p1.size()):
-						if is_point_in_sphere(p1[p_i],s_pos2[s_i2],r+padding):
-							use_point[p_i] = false
-				
-			for i in range(use_point.size()):
-				if use_point[i]:
-					disc_points[i] = p1[i]
-#					if i == use_point.size()-1 :
-#						print(str(s_i) + ": " + str(line_points))
-						
-#						lines.append(line_points)
-#						var line_seg = DebugDraw2.new_line_seg(Vector3(0,0,5),color_arr[c_i1])
-#						line_seg.set_points(line_points)
-#						line_seg.construct()
-#					elif use_point[i+1] == false:
-#						lines.append(line_points)
-#						print(str(s_i) + ": " + str(line_points))
-#						var line_seg = DebugDraw2.new_line_seg(Vector3(0,0,5),color_arr[c_i1])
-#						line_seg.set_points(line_points)
-#						line_seg.construct()
-#						line_points = {}
-				if disc_points.size() > 1:
-					branches[c_i1].append(disc_points)
-#			if lines.size() > 0:
-##				print(str(s_i) + ": " + str(lines))
-#				branches[c_i1].append(lines)
-#				lines = []
-	return branches
-
-
-func generate_mesh(branches):
-	var mesh_imm = ImmediateMesh.new()
-	var mesh_inst = MeshInstance3D.new()
-	
-	for b_i in range(branches.size()-1):
-		mesh_imm.surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
-		mesh_imm.surface_set_normal(Vector3(0,0,1))
-		for d_i in range(branches[b_i].size()):
-			for line in branches[b_i][d_i]:
-				for i in line:
-					mesh_imm.surface_add_vertex(line[i])
-					mesh_imm.surface_add_vertex(branches[b_i][d_i][i])
-	#				mesh_imm.surface_add_vertex(lines[l_i+1][p_i_next])
-		mesh_imm.surface_end()
-
-
-func is_point_in_sphere(p_pos, s_pos, r):
-	return (p_pos - s_pos).length() < r
-
-
-func gen_circle(pos:Vector3, r:float, n:Vector3, res:int):
-	var rot = 0
-	var step = PI/2/res
-	var points:PackedVector3Array = []
-	var point = (Vector3.UP).cross(n).cross(n)
-	if (point == Vector3.ZERO): point = r*Vector3.FORWARD #will need info to align this correctly
-	else: point *=  r/point.length()
-	for i in range(4*res):
-		points.append(point.rotated(n, rot)+pos)
-		rot+=step
-	points.append(points[0]) #this is only necessary to complete the circle if points are used to generate lines
-	return points

@@ -1,10 +1,10 @@
 extends Node3D
 
-@export var bake_interval = 0.05
+@export var bake_interval = 0.1
 @export var padding = 0.00
 var debug_draw
 
-var circ_res = 100
+var circ_res = 5
 var point_cloud = DebugDraw2.new_point_cloud(Vector3.ZERO, 2, Color.GREEN)
 var color_arr = [Color.RED, Color.GREEN, Color.BLUE, Color.CYAN, Color.ORANGE_RED]
 var line_segment = DebugDraw2.new_line_seg(Vector3(0,0,-5),Color.RED)
@@ -44,12 +44,19 @@ func _ready():
 #			line_seg.construct()
 
 
-
 # Generate vertices from curves
-# return branches, contains vertex data ordered per branch per disc
-# Branches: Array of Discs on branch
-# Disc: Dict with key as vertex index on disc and value as position in 3D space
+# Return [arr,branches]
+# branches: Array of discs on branch
+# disc: Dict, index on disc as key, vertex index as value
+# arr: Mesh array
 func generate_vertices(curves,r):
+	# Array mesh data
+	var arr = []
+	arr.resize(Mesh.ARRAY_MAX)
+	var verts = PackedVector3Array()
+	var normals = PackedVector3Array()
+	var index = 0
+	
 	for c in curves:
 		c.set_bake_interval(bake_interval)
 	
@@ -87,45 +94,61 @@ func generate_vertices(curves,r):
 					# Polygon construction possible checks
 					if i == 0:
 						if use_point[i+1] == true:
-							disc_points[i] = {"vertex":p1[i],"normal":p1[i]-s_pos1[s_i]}
+							verts.append(p1[i])
+							normals.append((p1[i]-s_pos1[s_i]).normalized())
+							disc_points[i] = index
+							index += 1
 					elif i == use_point.size()-1:
 						if use_point[i-1] == true:
-							disc_points[i] = {"vertex":p1[i],"normal":p1[i]-s_pos1[s_i]}
+							verts.append(p1[i])
+							normals.append((p1[i]-s_pos1[s_i]).normalized())
+							disc_points[i] = index
+							index += 1
 					elif use_point[i+1] == true || use_point[i-1] == true:
-						disc_points[i] = {"vertex":p1[i],"normal":p1[i]-s_pos1[s_i]}
+						verts.append(p1[i])
+						normals.append((p1[i]-s_pos1[s_i]).normalized())
+						disc_points[i] = index
+						index += 1
 			# Add disc to current branch
 			branches[c_i1].append(disc_points)
-	return branches
+	arr[Mesh.ARRAY_VERTEX] = verts
+	arr[Mesh.ARRAY_NORMAL] = normals
+	return [arr, branches]
 
 
 # Generate a mesh from the given curves
 func generate_mesh(curves):
 	# Get vertecices ordered by branch and disc
-	var branches = generate_vertices(curves,0.5)
+	var data = generate_vertices(curves,0.5)
+	var arr = data[0]
+	var indices:PackedInt32Array = []
+	var branches = data[1]
 	var mesh_inst = MeshInstance3D.new()
-	var mesh_imm = ImmediateMesh.new()
+	var mesh = ArrayMesh.new()
 	
 	# Iterate adding vertices branch by branch creating strips from stacked discs
 	for b_i in range(branches.size()):
 		for d_i in range(branches[b_i].size()-1):
 			var keys = branches[b_i][d_i].keys()
 			if keys.size() > 1:
-				mesh_imm.surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
-				for k_i in range(keys.size()):
-					
-					# When strip ends prematurley end current strip and start another
-					if keys[k_i] - keys[k_i-1] > 1:
-						mesh_imm.surface_end()
-						mesh_imm.surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
-						
-					# Connect current vertex to vertex in above disc
-					mesh_imm.surface_set_normal(branches[b_i][d_i][keys[k_i]]["normal"])
-					mesh_imm.surface_add_vertex(branches[b_i][d_i][keys[k_i]]["vertex"])
-					mesh_imm.surface_set_normal(branches[b_i][d_i][keys[k_i]]["normal"])
-					mesh_imm.surface_add_vertex(branches[b_i][d_i+1][keys[k_i]]["vertex"])
-				mesh_imm.surface_end()
-	mesh_inst.mesh = mesh_imm
-	ResourceSaver.save("res://TestMesh.tres", mesh_imm)
+				for k_i in range(keys.size()-1):
+					# Only add when square possible
+					if keys[k_i+1] - keys[k_i] <= 1:
+						# Triangle 1
+						indices.append(branches[b_i][d_i][keys[k_i]])
+						indices.append(branches[b_i][d_i+1][keys[k_i]])
+						indices.append(branches[b_i][d_i][keys[k_i+1]])
+						# Triangle 2
+						indices.append(branches[b_i][d_i][keys[k_i+1]])
+						indices.append(branches[b_i][d_i+1][keys[k_i]])
+						indices.append(branches[b_i][d_i+1][keys[k_i+1]])
+	arr[Mesh.ARRAY_INDEX] = indices
+#	point_cloud.set_cloud(arr[Mesh.ARRAY_VERTEX])
+#	point_cloud.construct()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arr)
+	mesh_inst.mesh = mesh
+	print("Surface count: " + str(mesh.get_surface_count()))
+#	ResourceSaver.save("res://TestMesh.", mesh)
 	add_child(mesh_inst)
 
 

@@ -14,7 +14,7 @@ func new_line_seg(pos, color):
 	return line_seg
 
 class PointCloud extends MeshInstance3D:
-	var cloud:PackedVector3Array
+	var cloud:PackedVector3Array = []
 	var mat = StandardMaterial3D.new()
 	
 	func _init(p_size, color):
@@ -24,12 +24,9 @@ class PointCloud extends MeshInstance3D:
 	
 	
 	func add_point(p):
-		if p is PackedVector3Array:
-			cloud += p
-		else:
-			cloud.push_back(p)
-	
-	
+		cloud.append(p)
+	func add_points(p):
+		cloud += p
 	func set_cloud(c):
 		cloud = c
 	
@@ -42,7 +39,6 @@ class PointCloud extends MeshInstance3D:
 			mesh_imm.surface_add_vertex(p)
 		mesh_imm.surface_end()
 		mesh_imm.surface_set_material(0,mat)
-		print(mesh_imm.surface_get_material(0))
 		set_mesh(mesh_imm)
 
 class LineSegment extends MeshInstance3D:
@@ -52,7 +48,7 @@ class LineSegment extends MeshInstance3D:
 	func _init(color):
 		mat.albedo_color = color
 	
-	func add_point(point:Vector3): points.push_back(point)
+	func add_point(point:Vector3): points.append(point)
 	func add_points(new_points:PackedVector3Array): points += new_points
 	func set_points(new_points:PackedVector3Array): points = new_points
 	

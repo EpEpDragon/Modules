@@ -4,13 +4,16 @@ extends Node3D
 @export var padding = 0.00
 var debug_draw
 
-var circ_res = 5
-var point_cloud = DebugDraw2.new_point_cloud(Vector3.ZERO, 2, Color.GREEN)
+var circ_res = 10
+var point_cloud = DebugDraw2.new_point_cloud(Vector3.ZERO, 5, Color.GREEN)
+var point_cloud2 = DebugDraw2.new_point_cloud(Vector3.ZERO, 10, Color.RED)
+var point_cloud3 = DebugDraw2.new_point_cloud(Vector3.ZERO, 10, Color.ORANGE)
 var color_arr = [Color.RED, Color.GREEN, Color.BLUE, Color.CYAN, Color.ORANGE_RED]
 var line_segment = DebugDraw2.new_line_seg(Vector3(0,0,-5),Color.RED)
 
 
 func _ready():
+#	get_viewport().debug_draw = Viewport.DEBUG_DRAW_WIREFRAME
 	var curves = [$Path3D.get_curve(), $Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve()]
 	generate_mesh(curves)
 #	var portals = generate_portals(curves,0.1,0.1)
@@ -56,15 +59,17 @@ func generate_vertices(curves,r):
 	var verts = PackedVector3Array()
 	var normals = PackedVector3Array()
 	var index = 0
+	var branches = []
+	var entry_loop = PackedVector3Array() 
 	
 	for c in curves:
 		c.set_bake_interval(bake_interval)
 	
-	var branches = []
 	var n_b = Vector3(0,1,0)
+	
 	# Loop through each curve
 	for c_i1 in range(curves.size()):
-		branches.push_back([])
+		branches.append([])
 		var s_pos1 = curves[c_i1].get_baked_points() # sphere points 1
 		var prev1 = -n_b
 		# Loop through each baked point on curve, i.e. each disc
@@ -72,10 +77,14 @@ func generate_vertices(curves,r):
 			var n1 = (s_pos1[s_i] - prev1).normalized() # Normal of current disc
 			prev1 = s_pos1[s_i] # Previous disc position, use to calc normal
 			var p1 = gen_circle(s_pos1[s_i], r,n1,circ_res) # Points on current disc
+			# Add entry loop to edge loops
+			if c_i1 == 0 && s_i == 0:
+				entry_loop = p1
+				
 			var use_point:Array[bool] = []
 			# Initialise flag array
 			for i in p1:
-				use_point.push_back(true)
+				use_point.append(true)
 				
 			# Check, and flag, points on current disc against spheres on all other branches 
 			for c_i2 in range(curves.size()):
@@ -91,29 +100,18 @@ func generate_vertices(curves,r):
 			for i in range(use_point.size()):
 				# Flag array check
 				if use_point[i]:
-					# Polygon construction possible checks
-					if i == 0:
-						if use_point[i+1] == true:
-							verts.append(p1[i])
-							normals.append((p1[i]-s_pos1[s_i]).normalized())
-							disc_points[i] = index
-							index += 1
-					elif i == use_point.size()-1:
-						if use_point[i-1] == true:
-							verts.append(p1[i])
-							normals.append((p1[i]-s_pos1[s_i]).normalized())
-							disc_points[i] = index
-							index += 1
-					elif use_point[i+1] == true || use_point[i-1] == true:
-						verts.append(p1[i])
-						normals.append((p1[i]-s_pos1[s_i]).normalized())
-						disc_points[i] = index
-						index += 1
+					verts.append(p1[i])
+					normals.append((p1[i]-s_pos1[s_i]).normalized())
+					disc_points[i] = index
+					index += 1
+				else:
+					if c_i1 == 0:
+						point_cloud3.add_point(p1[i])
 			# Add disc to current branch
-			branches[c_i1].append(disc_points)
+			branches[c_i1].append([disc_points, use_point])
 	arr[Mesh.ARRAY_VERTEX] = verts
 	arr[Mesh.ARRAY_NORMAL] = normals
-	return [arr, branches]
+	return [arr, branches, entry_loop]
 
 
 # Generate a mesh from the given curves
@@ -121,30 +119,53 @@ func generate_mesh(curves):
 	# Get vertecices ordered by branch and disc
 	var data = generate_vertices(curves,0.5)
 	var arr = data[0]
-	var indices:PackedInt32Array = []
 	var branches = data[1]
+	var edge_loops = []
+	edge_loops.append(data[2])
+	var indices:PackedInt32Array = []
 	var mesh_inst = MeshInstance3D.new()
 	var mesh = ArrayMesh.new()
 	
 	# Iterate adding vertices branch by branch creating strips from stacked discs
 	for b_i in range(branches.size()):
+		edge_loops.append(PackedVector3Array())
 		for d_i in range(branches[b_i].size()-1):
-			var keys = branches[b_i][d_i].keys()
+			var keys = branches[b_i][d_i][0].keys()
+			# Identify edge loops
+			for i in range(branches[b_i][d_i][1].size()-1):
+				if branches[b_i][d_i][1][i] == true:
+					if (branches[b_i][d_i-1][1][i] == false || 
+					branches[b_i][d_i-1][1][i+1] == false ||
+					branches[b_i][d_i-1][1][i-1] == false ||
+					branches[b_i][d_i][1][i+1] == false ||
+					branches[b_i][d_i][1][i-1] == false ||
+					branches[b_i][d_i+1][1][i] == false || 
+					branches[b_i][d_i+1][1][i+1] == false ||
+					branches[b_i][d_i+1][1][i-1] == false):
+						edge_loops[b_i].append(arr[Mesh.ARRAY_VERTEX][branches[b_i][d_i][0][i]])
+			
 			if keys.size() > 1:
 				for k_i in range(keys.size()-1):
 					# Only add when square possible
 					if keys[k_i+1] - keys[k_i] <= 1:
 						# Triangle 1
-						indices.append(branches[b_i][d_i][keys[k_i]])
-						indices.append(branches[b_i][d_i+1][keys[k_i]])
-						indices.append(branches[b_i][d_i][keys[k_i+1]])
+						indices.append(branches[b_i][d_i][0][keys[k_i]])
+						indices.append(branches[b_i][d_i+1][0][keys[k_i]])
+						indices.append(branches[b_i][d_i][0][keys[k_i+1]])
 						# Triangle 2
-						indices.append(branches[b_i][d_i][keys[k_i+1]])
-						indices.append(branches[b_i][d_i+1][keys[k_i]])
-						indices.append(branches[b_i][d_i+1][keys[k_i+1]])
+						indices.append(branches[b_i][d_i][0][keys[k_i+1]])
+						indices.append(branches[b_i][d_i+1][0][keys[k_i]])
+						indices.append(branches[b_i][d_i+1][0][keys[k_i+1]])
+	point_cloud2.add_points(edge_loops[0])
+	point_cloud2.add_points(edge_loops[1])
+	point_cloud2.add_points(edge_loops[2])
+	point_cloud2.add_points(edge_loops[3])
+	point_cloud2.add_points(edge_loops[4])
 	arr[Mesh.ARRAY_INDEX] = indices
-#	point_cloud.set_cloud(arr[Mesh.ARRAY_VERTEX])
+	point_cloud.add_points(arr[Mesh.ARRAY_VERTEX])
 #	point_cloud.construct()
+	point_cloud2.construct()
+#	point_cloud3.construct()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arr)
 	mesh_inst.mesh = mesh
 	print("Surface count: " + str(mesh.get_surface_count()))
@@ -177,7 +198,6 @@ func generate_cloud(curves,r):
 	var cloud:PackedVector3Array = []
 	var n_b = Vector3(0,1,0)
 	for c_i1 in range(curves.size()):
-		print(range(curves.size()))
 		var s_pos1 = curves[c_i1].get_baked_points() # sphere points 1
 		var prev1 = -n_b
 		for s_i1 in range(s_pos1.size()):

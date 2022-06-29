@@ -132,15 +132,18 @@ func generate_mesh(curves):
 		for d_i in range(branches[b_i].size()-1):
 			var keys = branches[b_i][d_i][0].keys()
 			# Identify edge loops
-			for i in range(branches[b_i][d_i][1].size()-1):
+			for i in range(branches[b_i][d_i][1].size()):
 				if branches[b_i][d_i][1][i] == true:
+					var i_next = i + 1
+					if i == branches[b_i][d_i][1].size()-1:
+						i_next = 0
 					if (branches[b_i][d_i-1][1][i] == false || 
-					branches[b_i][d_i-1][1][i+1] == false ||
+					branches[b_i][d_i-1][1][i_next] == false ||
 					branches[b_i][d_i-1][1][i-1] == false ||
-					branches[b_i][d_i][1][i+1] == false ||
+					branches[b_i][d_i][1][i_next] == false ||
 					branches[b_i][d_i][1][i-1] == false ||
 					branches[b_i][d_i+1][1][i] == false || 
-					branches[b_i][d_i+1][1][i+1] == false ||
+					branches[b_i][d_i+1][1][i_next] == false ||
 					branches[b_i][d_i+1][1][i-1] == false):
 						edge_loops[b_i].append(arr[Mesh.ARRAY_VERTEX][branches[b_i][d_i][0][i]])
 			

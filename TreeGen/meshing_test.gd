@@ -1,11 +1,16 @@
 extends Node3D
 
+# These should be about linearly, inversely, proportional
+# About: circ_res = 20 - bake_interval * 100
 @export var bake_interval = 0.1
+@export var circ_res = 10
+
 @export var padding = 0.00
 @export var padding_slope = 0.1
+
 var debug_draw
 
-var circ_res = 10
+
 var point_cloud = DebugDraw2.new_point_cloud(Vector3.ZERO, 5, Color.GREEN)
 var point_cloud2 = DebugDraw2.new_point_cloud(Vector3.ZERO, 10, Color.RED)
 var point_cloud3 = DebugDraw2.new_point_cloud(Vector3.ZERO, 10, Color.ORANGE)
@@ -76,6 +81,10 @@ func generate_vertices(curves,r):
 		# Loop through each baked point on curve, i.e. each disc
 		for s_i in range(s_pos1.size()):
 			var n1 = (s_pos1[s_i] - prev1).normalized() # Normal of current disc
+			# Padding formula
+			var ang = n1.angle_to(Vector3.UP)
+			var padd = padding + padding*padding_slope*s_i*ang*ang*ang
+			
 			prev1 = s_pos1[s_i] # Previous disc position, use to calc normal
 			var p1 = gen_circle(s_pos1[s_i], r,n1,circ_res) # Points on current disc
 			# Add entry loop to edge loops
@@ -93,7 +102,7 @@ func generate_vertices(curves,r):
 					var s_pos2 = curves[c_i2].get_baked_points() # sphere points 2
 					var s_i2 = min(s_i,s_pos2.size()-1)
 					for p_i in range(p1.size()):
-						if is_point_in_sphere(p1[p_i],s_pos2[s_i2],r+padding):
+						if is_point_in_sphere(p1[p_i],s_pos2[s_i2],r+padd):
 							use_point[p_i] = false
 			
 			var disc_points = {} 
@@ -105,9 +114,6 @@ func generate_vertices(curves,r):
 					normals.append((p1[i]-s_pos1[s_i]).normalized())
 					disc_points[i] = index
 					index += 1
-				else:
-					if c_i1 == 0:
-						point_cloud3.add_point(p1[i])
 			# Add disc to current branch
 			branches[c_i1].append([disc_points, use_point])
 	arr[Mesh.ARRAY_VERTEX] = verts
@@ -146,7 +152,7 @@ func generate_mesh(curves):
 								indices.append(branches[b_i][d_i-1][0][i])
 								indices.append(branches[b_i][d_i][0][i])
 								indices.append(branches[b_i][d_i][0][i_next])
-							elif branches[b_i][d_i-1][1][i-1] == false:
+							if branches[b_i][d_i-1][1][i-1] == false:
 								indices.append(branches[b_i][d_i-1][0][i])
 								indices.append(branches[b_i][d_i][0][i-1])
 								indices.append(branches[b_i][d_i][0][i])
@@ -181,7 +187,7 @@ func generate_mesh(curves):
 	arr[Mesh.ARRAY_INDEX] = indices
 	point_cloud.add_points(arr[Mesh.ARRAY_VERTEX])
 #	point_cloud.construct()
-	point_cloud2.construct()
+#	point_cloud2.construct()
 #	point_cloud3.construct()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arr)
 	mesh_inst.mesh = mesh

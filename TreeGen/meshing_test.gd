@@ -2,6 +2,7 @@ extends Node3D
 
 @export var bake_interval = 0.1
 @export var padding = 0.00
+@export var padding_slope = 0.1
 var debug_draw
 
 var circ_res = 10
@@ -135,9 +136,22 @@ func generate_mesh(curves):
 			for i in range(branches[b_i][d_i][1].size()):
 				if branches[b_i][d_i][1][i] == true:
 					var i_next = i + 1
+					# Wrap for overflow
 					if i == branches[b_i][d_i][1].size()-1:
 						i_next = 0
-					if (branches[b_i][d_i-1][1][i] == false || 
+					# Remove concave vertex from edge loop by filling triangle 
+					if (branches[b_i][d_i-1][1][i] == true && branches[b_i][d_i][1][i-1] == true 
+						&& branches[b_i][d_i][1][i_next] == true):
+							if branches[b_i][d_i-1][1][i_next] == false:
+								indices.append(branches[b_i][d_i-1][0][i])
+								indices.append(branches[b_i][d_i][0][i])
+								indices.append(branches[b_i][d_i][0][i_next])
+							elif branches[b_i][d_i-1][1][i-1] == false:
+								indices.append(branches[b_i][d_i-1][0][i])
+								indices.append(branches[b_i][d_i][0][i-1])
+								indices.append(branches[b_i][d_i][0][i])
+					# Edge loop
+					elif (branches[b_i][d_i-1][1][i] == false || 
 					branches[b_i][d_i-1][1][i_next] == false ||
 					branches[b_i][d_i-1][1][i-1] == false ||
 					branches[b_i][d_i][1][i_next] == false ||
@@ -147,18 +161,18 @@ func generate_mesh(curves):
 					branches[b_i][d_i+1][1][i-1] == false):
 						edge_loops[b_i].append(arr[Mesh.ARRAY_VERTEX][branches[b_i][d_i][0][i]])
 			
-			if keys.size() > 1:
-				for k_i in range(keys.size()-1):
-					# Only add when square possible
-					if keys[k_i+1] - keys[k_i] <= 1:
-						# Triangle 1
-						indices.append(branches[b_i][d_i][0][keys[k_i]])
-						indices.append(branches[b_i][d_i+1][0][keys[k_i]])
-						indices.append(branches[b_i][d_i][0][keys[k_i+1]])
-						# Triangle 2
-						indices.append(branches[b_i][d_i][0][keys[k_i+1]])
-						indices.append(branches[b_i][d_i+1][0][keys[k_i]])
-						indices.append(branches[b_i][d_i+1][0][keys[k_i+1]])
+#			if keys.size() > 1:
+			for k_i in range(keys.size()-1):
+				# Only add when square possible
+				if keys[k_i+1] - keys[k_i] <= 1:
+					# Triangle 1
+					indices.append(branches[b_i][d_i][0][keys[k_i]])
+					indices.append(branches[b_i][d_i+1][0][keys[k_i]])
+					indices.append(branches[b_i][d_i][0][keys[k_i+1]])
+					# Triangle 2
+					indices.append(branches[b_i][d_i][0][keys[k_i+1]])
+					indices.append(branches[b_i][d_i+1][0][keys[k_i]])
+					indices.append(branches[b_i][d_i+1][0][keys[k_i+1]])
 	point_cloud2.add_points(edge_loops[0])
 	point_cloud2.add_points(edge_loops[1])
 	point_cloud2.add_points(edge_loops[2])

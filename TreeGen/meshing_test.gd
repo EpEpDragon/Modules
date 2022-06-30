@@ -53,7 +53,7 @@ func _ready():
 # Generate vertices from curves
 # Return [arr,branches]
 # branches: Array of discs on branch
-# disc: Dict, index on disc as key, vertex index as value
+# disc: vertex disc index to global index
 # arr: Mesh array
 func generate_vertices(curves,r):
 	# Array mesh data
@@ -103,7 +103,8 @@ func generate_vertices(curves,r):
 						if is_point_in_sphere(p1[p_i],s_pos2[s_i2],r+padd):
 							use_point[p_i] = false
 			
-			var disc_points = {} 
+			var disc_points = []
+			disc_points.resize(p1.size())
 			# Add points to disc based checks
 			for i in range(use_point.size()):
 				# Flag array check
@@ -228,7 +229,7 @@ func gen_circle(pos:Vector3, r:float, n:Vector3, res:int):
 	for i in range(4*res):
 		points.append(point.rotated(n, rot)+pos)
 		rot+=step
-	points.append(points[0]) #this is only necessary to complete the circle if points are used to generate lines
+#	points.append(points[0]) #this is only necessary to complete the circle if points are used to generate lines
 	return points
 
 ####################################### Debug use functions ###################################

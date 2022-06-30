@@ -24,7 +24,6 @@ var branch_normal = Vector3.FORWARD
 var stack:Array[Dictionary] = []
 
 @onready var sequence = axiom
-@onready var DebugDraw = get_node("../DebugDraw")
 
 #var lines:Array[Dictionary] = []
 var paths:Array[Path3D] = []
@@ -142,8 +141,6 @@ func _ready():
 #	print(sequence)
 	construct_path()
 	construct_mesh()
-	DebugDraw.set_paths(paths)
-#	DebugDraw.set_lines(lines)
 
 
 # Grow the sequence up to interations specified

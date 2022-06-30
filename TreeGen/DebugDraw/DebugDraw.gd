@@ -1,5 +1,4 @@
 extends Node3D
-class_name DebugDraw
 
 func new_point_cloud(pos, p_size, color):
 	var point_cloud = PointCloud.new(p_size, color)

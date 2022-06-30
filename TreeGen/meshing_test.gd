@@ -8,12 +8,11 @@ extends Node3D
 @export var padding = 0.00
 @export var padding_slope = 0.1
 
-var point_cloud = DebugDraw2.new_point_cloud(Vector3.ZERO, 5, Color.GREEN)
-var point_cloud2 = DebugDraw2.new_point_cloud(Vector3.ZERO, 10, Color.RED)
-var point_cloud3 = DebugDraw2.new_point_cloud(Vector3.ZERO, 10, Color.ORANGE)
-var debug_line = DebugDraw2.new_line_seg(Vector3.ZERO, Color.RED)
+var point_cloud = DebugDraw.new_point_cloud(Vector3.ZERO, 5, Color.GREEN)
+var point_cloud2 = DebugDraw.new_point_cloud(Vector3.ZERO, 10, Color.RED)
+var point_cloud3 = DebugDraw.new_point_cloud(Vector3.ZERO, 10, Color.ORANGE)
 var color_arr = [Color.RED, Color.GREEN, Color.BLUE, Color.CYAN, Color.ORANGE_RED]
-var line_segment = DebugDraw2.new_line_seg(Vector3(0,0,-5),Color.RED)
+var line_segment = DebugDraw.new_line_seg(Vector3(0,0,-5),Color.RED)
 
 
 func _ready():
@@ -170,9 +169,10 @@ func generate_mesh(curves):
 						not branches[b_i][d_i+1][1][i]):
 							edge_loops[b_i].append(arr[Mesh.ARRAY_VERTEX][branches[b_i][d_i][0][i]])
 							
+	var debug_edge_loops = []
 	for l in edge_loops:
 		point_cloud2.add_points(l)
-		debug_line.add_points(l)
+#		debug_edge_loops.append(DebugDraw)
 	
 	arr[Mesh.ARRAY_INDEX] = indices
 	point_cloud.add_points(arr[Mesh.ARRAY_VERTEX])
@@ -262,12 +262,12 @@ func generate_line_segments(curves,r):
 					line_points.push_back(p1[i])
 					if i == use_point.size()-1 :
 						lines.append(line_points)
-						var line_seg = DebugDraw2.new_line_seg(Vector3(0,0,5),color_arr[c_i1])
+						var line_seg = DebugDraw.new_line_seg(Vector3(0,0,5),color_arr[c_i1])
 						line_seg.set_points(line_points)
 						line_seg.construct()
 					elif use_point[i+1] == false:
 						lines.append(line_points)
-						var line_seg = DebugDraw2.new_line_seg(Vector3(0,0,5),color_arr[c_i1])
+						var line_seg = DebugDraw.new_line_seg(Vector3(0,0,5),color_arr[c_i1])
 						line_seg.set_points(line_points)
 						line_seg.construct()
 						line_points = []

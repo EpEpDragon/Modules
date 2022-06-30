@@ -11,7 +11,7 @@ extends Node3D
 var point_cloud = DebugDraw.new_point_cloud(Vector3.ZERO, 5, Color.GREEN)
 var point_cloud2 = DebugDraw.new_point_cloud(Vector3.ZERO, 10, Color.RED)
 var point_cloud3 = DebugDraw.new_point_cloud(Vector3.ZERO, 10, Color.ORANGE)
-var color_arr = [Color.RED, Color.GREEN, Color.BLUE, Color.CYAN, Color.ORANGE_RED]
+var color_arr = [Color.RED, Color.GREEN, Color.YELLOW, Color.CYAN, Color.WHITE]
 var line_segment = DebugDraw.new_line_seg(Vector3(0,0,-5),Color.RED)
 
 
@@ -87,6 +87,7 @@ func generate_vertices(curves,r):
 			# Add entry loop to edge loops
 			if c_i1 == 0 && s_i == 0:
 				entry_loop = p1
+				print(p1)
 				
 			var use_point:Array[bool] = []
 			# Initialise flag array
@@ -135,6 +136,7 @@ func generate_mesh(curves):
 		edge_loops.append(PackedVector3Array())
 		for d_i in range(branches[b_i].size()-1):
 			# Identify edge loops
+			
 			for i in range(branches[b_i][d_i][1].size()):
 				if branches[b_i][d_i][1][i]:
 					var i_next = i + 1
@@ -167,12 +169,18 @@ func generate_mesh(curves):
 						not branches[b_i][d_i][1][i_next] ||
 						not branches[b_i][d_i][1][i-1] ||
 						not branches[b_i][d_i+1][1][i]):
-							edge_loops[b_i].append(arr[Mesh.ARRAY_VERTEX][branches[b_i][d_i][0][i]])
-							
+							edge_loops[b_i+1].append(arr[Mesh.ARRAY_VERTEX][branches[b_i][d_i][0][i]])
 	var debug_edge_loops = []
-	for l in edge_loops:
-		point_cloud2.add_points(l)
-#		debug_edge_loops.append(DebugDraw)
+	point_cloud2.add_points(edge_loops[0])
+	debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[0]))
+	debug_edge_loops[-1].add_points(edge_loops[0])
+	debug_edge_loops[-1].construct()
+	for l in range(edge_loops.size()-1):
+		var loop_new = order_loop(edge_loops[l+1])
+		point_cloud2.add_points(loop_new)
+		debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[l+1]))
+		debug_edge_loops[-1].add_points(loop_new)
+		debug_edge_loops[-1].construct()
 	
 	arr[Mesh.ARRAY_INDEX] = indices
 	point_cloud.add_points(arr[Mesh.ARRAY_VERTEX])
@@ -181,11 +189,30 @@ func generate_mesh(curves):
 #	point_cloud3.construct()
 #	debug_line.construct()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arr)
-	mesh_inst.mesh = mesh
+#	mesh_inst.set_mesh(mesh)
 	print("Surface count: " + str(mesh.get_surface_count()))
 #	ResourceSaver.save("res://TestMesh.", mesh)
 	add_child(mesh_inst)
 
+func order_loop(loop):
+	var ordered_loop = PackedVector3Array()
+	ordered_loop.resize(loop.size())
+	ordered_loop[0] = loop[0]
+	var c_i = 0 # Current point in unordered sequence
+	var n_i = 0 # Next point to test against
+	for i in range(loop.size()-1): # Current index of oredered sequence
+		var short_dist = INF
+		for comp_i in range(loop.size()):
+			if comp_i != c_i:
+				var dist = loop[c_i].distance_squared_to(loop[comp_i])
+				if dist < short_dist:
+					short_dist = dist
+					n_i = comp_i
+		ordered_loop[i+1] = loop[n_i]
+		loop[c_i] = Vector3(INF,INF,INF)
+		c_i = n_i
+		
+	return ordered_loop
 
 func is_point_in_sphere(p_pos, s_pos, r):
 	return (p_pos - s_pos).length() < r

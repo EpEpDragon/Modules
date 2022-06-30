@@ -8,12 +8,10 @@ extends Node3D
 @export var padding = 0.00
 @export var padding_slope = 0.1
 
-var debug_draw
-
-
 var point_cloud = DebugDraw2.new_point_cloud(Vector3.ZERO, 5, Color.GREEN)
 var point_cloud2 = DebugDraw2.new_point_cloud(Vector3.ZERO, 10, Color.RED)
 var point_cloud3 = DebugDraw2.new_point_cloud(Vector3.ZERO, 10, Color.ORANGE)
+var debug_line = DebugDraw2.new_line_seg(Vector3.ZERO, Color.RED)
 var color_arr = [Color.RED, Color.GREEN, Color.BLUE, Color.CYAN, Color.ORANGE_RED]
 var line_segment = DebugDraw2.new_line_seg(Vector3(0,0,-5),Color.RED)
 
@@ -145,50 +143,44 @@ func generate_mesh(curves):
 					# Wrap for overflow
 					if i == branches[b_i][d_i][1].size()-1:
 						i_next = 0
+					# Main mesh
+					if (branches[b_i][d_i][1][i_next]):
+						# Triangle 1
+						indices.append(branches[b_i][d_i][0][i])
+						indices.append(branches[b_i][d_i+1][0][i])
+						indices.append(branches[b_i][d_i][0][i_next])
+						# Triangle 2
+						indices.append(branches[b_i][d_i][0][i_next])
+						indices.append(branches[b_i][d_i+1][0][i])
+						indices.append(branches[b_i][d_i+1][0][i_next])
 					# Remove concave vertex from edge loop by filling triangle 
-					if (branches[b_i][d_i-1][1][i] == true && branches[b_i][d_i][1][i-1] == true 
-						&& branches[b_i][d_i][1][i_next] == true):
-							if branches[b_i][d_i-1][1][i_next] == false:
+					if (branches[b_i][d_i-1][1][i] && branches[b_i][d_i][1][i-1] 
+						&& branches[b_i][d_i][1][i_next]):
+							if not branches[b_i][d_i-1][1][i_next]:
 								indices.append(branches[b_i][d_i-1][0][i])
 								indices.append(branches[b_i][d_i][0][i])
 								indices.append(branches[b_i][d_i][0][i_next])
-							if branches[b_i][d_i-1][1][i-1] == false:
+							if not branches[b_i][d_i-1][1][i-1]:
 								indices.append(branches[b_i][d_i-1][0][i])
 								indices.append(branches[b_i][d_i][0][i-1])
 								indices.append(branches[b_i][d_i][0][i])
 					# Edge loop
-					elif (branches[b_i][d_i-1][1][i] == false || 
-					branches[b_i][d_i-1][1][i_next] == false ||
-					branches[b_i][d_i-1][1][i-1] == false ||
-					branches[b_i][d_i][1][i_next] == false ||
-					branches[b_i][d_i][1][i-1] == false ||
-					branches[b_i][d_i+1][1][i] == false || 
-					branches[b_i][d_i+1][1][i_next] == false ||
-					branches[b_i][d_i+1][1][i-1] == false):
-						edge_loops[b_i].append(arr[Mesh.ARRAY_VERTEX][branches[b_i][d_i][0][i]])
-			
-#			if keys.size() > 1:
-			for k_i in range(keys.size()-1):
-				# Only add when square possible
-				if keys[k_i+1] - keys[k_i] <= 1:
-					# Triangle 1
-					indices.append(branches[b_i][d_i][0][keys[k_i]])
-					indices.append(branches[b_i][d_i+1][0][keys[k_i]])
-					indices.append(branches[b_i][d_i][0][keys[k_i+1]])
-					# Triangle 2
-					indices.append(branches[b_i][d_i][0][keys[k_i+1]])
-					indices.append(branches[b_i][d_i+1][0][keys[k_i]])
-					indices.append(branches[b_i][d_i+1][0][keys[k_i+1]])
-	point_cloud2.add_points(edge_loops[0])
-	point_cloud2.add_points(edge_loops[1])
-	point_cloud2.add_points(edge_loops[2])
-	point_cloud2.add_points(edge_loops[3])
-	point_cloud2.add_points(edge_loops[4])
+					elif (not branches[b_i][d_i-1][1][i] || 
+						not branches[b_i][d_i][1][i_next] ||
+						not branches[b_i][d_i][1][i-1] ||
+						not branches[b_i][d_i+1][1][i]):
+							edge_loops[b_i].append(arr[Mesh.ARRAY_VERTEX][branches[b_i][d_i][0][i]])
+							
+	for l in edge_loops:
+		point_cloud2.add_points(l)
+		debug_line.add_points(l)
+	
 	arr[Mesh.ARRAY_INDEX] = indices
 	point_cloud.add_points(arr[Mesh.ARRAY_VERTEX])
 #	point_cloud.construct()
-#	point_cloud2.construct()
+	point_cloud2.construct()
 #	point_cloud3.construct()
+#	debug_line.construct()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arr)
 	mesh_inst.mesh = mesh
 	print("Surface count: " + str(mesh.get_surface_count()))

@@ -135,10 +135,9 @@ func generate_mesh(curves):
 	for b_i in range(branches.size()):
 		edge_loops.append(PackedVector3Array())
 		for d_i in range(branches[b_i].size()-1):
-			var keys = branches[b_i][d_i][0].keys()
 			# Identify edge loops
 			for i in range(branches[b_i][d_i][1].size()):
-				if branches[b_i][d_i][1][i] == true:
+				if branches[b_i][d_i][1][i]:
 					var i_next = i + 1
 					# Wrap for overflow
 					if i == branches[b_i][d_i][1].size()-1:

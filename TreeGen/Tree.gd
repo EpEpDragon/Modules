@@ -140,7 +140,12 @@ func _ready():
 	grow()
 #	print(sequence)
 	construct_path()
-	construct_mesh()
+	for p in paths:
+		var draw = DebugDraw.new_line_seg(Vector3.ZERO, Color.WHITE)
+		var points = p.get_curve().get_baked_points()
+		draw.add_points(p.get_curve().get_baked_points())
+		draw.construct()
+#	construct_mesh()
 
 
 # Grow the sequence up to interations specified

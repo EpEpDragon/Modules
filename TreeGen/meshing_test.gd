@@ -2,8 +2,8 @@ extends Node3D
 
 # These should be about linearly, inversely, proportional
 # About: circ_res = 20 - bake_interval * 100
-@export var bake_interval = 0.1
-@export var circ_res = 10
+@export var bake_interval = 0.2
+@export var circ_res = 5
 
 @export var padding = 0.00
 @export var padding_slope = 0.1
@@ -11,6 +11,7 @@ extends Node3D
 var point_cloud = DebugDraw.new_point_cloud(Vector3.ZERO, 5, Color.GREEN)
 var point_cloud2 = DebugDraw.new_point_cloud(Vector3.ZERO, 10, Color.RED)
 var point_cloud3 = DebugDraw.new_point_cloud(Vector3.ZERO, 10, Color.ORANGE)
+var labels = []
 var color_arr = [Color.RED, Color.GREEN, Color.YELLOW, Color.CYAN, Color.WHITE]
 var line_segment = DebugDraw.new_line_seg(Vector3(0,0,-5),Color.RED)
 
@@ -19,6 +20,7 @@ func _ready():
 #	get_viewport().debug_draw = Viewport.DEBUG_DRAW_WIREFRAME
 	var curves = [$Path3D.get_curve(), $Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve()]
 	generate_mesh(curves)
+	
 #	var portals = generate_portals(curves,0.1,0.1)
 #	for p in portals:
 #		if p != null:
@@ -49,6 +51,9 @@ func _ready():
 #				i_prev = i
 #			line_seg.construct()
 
+func _process(delta):
+	for l in labels:
+		l.update() 
 
 # Generate vertices from curves
 # Return [arr,branches]
@@ -56,6 +61,8 @@ func _ready():
 # disc: vertex disc index to global index
 # arr: Mesh array
 func generate_vertices(curves,r):
+	var tim1 = Time.get_unix_time_from_system()
+	
 	# Array mesh data
 	var arr = []
 	arr.resize(Mesh.ARRAY_MAX)
@@ -63,7 +70,7 @@ func generate_vertices(curves,r):
 	var normals = PackedVector3Array()
 	var index = 0
 	var branches = []
-	var entry_loop = PackedVector3Array() 
+	var entry_loop = PackedInt32Array() 
 	
 	for c in curves:
 		c.set_bake_interval(bake_interval)
@@ -85,9 +92,8 @@ func generate_vertices(curves,r):
 			prev1 = s_pos1[s_i] # Previous disc position, use to calc normal
 			var p1 = gen_circle(s_pos1[s_i], r,n1,circ_res) # Points on current disc
 			# Add entry loop to edge loops
-			if c_i1 == 0 && s_i == 0:
-				entry_loop = p1
-				print(p1)
+#			if c_i1 == 0 && s_i == 0:
+#				entry_loop = p1
 				
 			var use_point:Array[bool] = []
 			# Initialise flag array
@@ -117,13 +123,18 @@ func generate_vertices(curves,r):
 			branches[c_i1].append([disc_points, use_point])
 	arr[Mesh.ARRAY_VERTEX] = verts
 	arr[Mesh.ARRAY_NORMAL] = normals
+	var tim2 = Time.get_unix_time_from_system()
+	print("generate_vertices: " + str((tim2-tim1)*1000) + "ms")
 	return [arr, branches, entry_loop]
 
 
 # Generate a mesh from the given curves
 func generate_mesh(curves):
+	var tim1 = Time.get_unix_time_from_system()
+	
 	# Get vertecices ordered by branch and disc
 	var data = generate_vertices(curves,0.5)
+	
 	var arr = data[0]
 	var branches = data[1]
 	var edge_loops = []
@@ -134,7 +145,7 @@ func generate_mesh(curves):
 	
 	# Iterate adding vertices branch by branch creating strips from stacked discs
 	for b_i in range(branches.size()):
-		edge_loops.append(PackedVector3Array())
+		edge_loops.append(PackedInt32Array())
 		for d_i in range(branches[b_i].size()-1):
 			# Identify edge loops
 			
@@ -170,18 +181,66 @@ func generate_mesh(curves):
 						not branches[b_i][d_i][1][i_next] ||
 						not branches[b_i][d_i][1][i-1] ||
 						not branches[b_i][d_i+1][1][i]):
-							edge_loops[b_i+1].append(arr[Mesh.ARRAY_VERTEX][branches[b_i][d_i][0][i]])
-	var debug_edge_loops = []
-	point_cloud2.add_points(edge_loops[0])
-	debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[0]))
-	debug_edge_loops[-1].add_points(edge_loops[0])
-	debug_edge_loops[-1].construct()
+							edge_loops[b_i+1].append(branches[b_i][d_i][0][i])
+	# Stitch mesh
+#	for l in edge_loops:
+#		for p_i in range(l.size()):
+#			var min_dist = INF
+#			var p_close_i
+#			var l_close
+#			for lc in edge_loops:
+#				if l != lc:
+#					for pc_i in range(lc.size()-1):
+#						var dist = arr[Mesh.ARRAY_VERTEX][lc[pc_i]].distance_squared_to(arr[Mesh.ARRAY_VERTEX][l[p_i]])
+#						if dist < min_dist:
+#							min_dist = dist
+#							p_close_i = pc_i
+#							l_close = lc
+#			indices.append(l[p_i])
+#			indices.append(l_close[p_close_i])
+#			indices.append(l_close[p_close_i+1])
+	var loops_ordered = []
+	loops_ordered.resize(edge_loops.size()-1)
 	for l in range(edge_loops.size()-1):
-		var loop_new = order_loop(edge_loops[l+1])
-		point_cloud2.add_points(loop_new)
-		debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[l+1]))
-		debug_edge_loops[-1].add_points(loop_new)
+		loops_ordered[l-1] = order_loop(edge_loops[l+1], arr)
+	var l = loops_ordered[0]
+	for p_i in range(l.size()-1):
+		var min_dist = INF
+		var p_close_i
+		var l_close
+		for lc in loops_ordered:
+			if l != lc:
+				for pc_i in range(lc.size()-1):
+					var dist = arr[Mesh.ARRAY_VERTEX][lc[pc_i]].distance_squared_to(arr[Mesh.ARRAY_VERTEX][l[p_i]])
+					if dist < min_dist:
+						min_dist = dist
+						p_close_i = pc_i
+						l_close = lc
+		indices.append(l[p_i])
+		indices.append(l_close[p_close_i])
+		indices.append(l[p_i+1])
+		
+		
+		indices.append(l[p_i+1])
+		indices.append(l_close[p_close_i])
+		indices.append(l_close[p_close_i+1])
+	
+	######## DEBUG #########
+	var debug_edge_loops = []
+#	point_cloud2.add_points(arr[Mesh.ARRAY_VERTEX][edge_loops[0]])
+	debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[0]))
+#	debug_edge_loops[-1].add_points(arr[Mesh.ARRAY_VERTEX][edge_loops[0]])
+	debug_edge_loops[-1].construct()
+	for l_i in range(loops_ordered.size()):
+		debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[l_i+1]))
+		for p_i in range(loops_ordered[l_i].size()):
+			var pos = arr[Mesh.ARRAY_VERTEX][loops_ordered[l_i][p_i]]
+			labels.append(DebugDraw.new_label(str(p_i),pos,$Camera))
+			point_cloud2.add_point(pos)
+			debug_edge_loops[-1].add_point(pos)
 		debug_edge_loops[-1].construct()
+	########################
+	
 	
 	arr[Mesh.ARRAY_INDEX] = indices
 	point_cloud.add_points(arr[Mesh.ARRAY_VERTEX])
@@ -190,13 +249,14 @@ func generate_mesh(curves):
 #	point_cloud3.construct()
 #	debug_line.construct()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arr)
-#	mesh_inst.set_mesh(mesh)
-	print("Surface count: " + str(mesh.get_surface_count()))
+	mesh_inst.set_mesh(mesh)
 #	ResourceSaver.save("res://TestMesh.", mesh)
 	add_child(mesh_inst)
+	var tim2 = Time.get_unix_time_from_system()
+	print("generate_mesh: " + str((tim2-tim1)*1000) + "ms")
 
-func order_loop(loop):
-	var ordered_loop = PackedVector3Array()
+func order_loop(loop, arr):
+	var ordered_loop = PackedInt32Array()
 	ordered_loop.resize(loop.size())
 	ordered_loop[0] = loop[0]
 	var c_i = 0 # Current point in unordered sequence
@@ -205,12 +265,13 @@ func order_loop(loop):
 		var short_dist = INF
 		for comp_i in range(loop.size()):
 			if comp_i != c_i:
-				var dist = loop[c_i].distance_squared_to(loop[comp_i])
-				if dist < short_dist:
-					short_dist = dist
-					n_i = comp_i
+				if loop[comp_i] != -1:
+					var dist = arr[Mesh.ARRAY_VERTEX][loop[c_i]].distance_squared_to(arr[Mesh.ARRAY_VERTEX][loop[comp_i]])
+					if dist < short_dist:
+						short_dist = dist
+						n_i = comp_i
 		ordered_loop[i+1] = loop[n_i]
-		loop[c_i] = Vector3(INF,INF,INF)
+		loop[c_i] = -1
 		c_i = n_i
 		
 	return ordered_loop

@@ -12,6 +12,11 @@ func new_line_seg(pos, color):
 	add_child(line_seg)
 	return line_seg
 
+func new_label(text:String, pos:Vector3, camera:Camera3D):
+	var label = D_Label.new(text,pos,camera)
+	add_child(label)
+	return label
+
 class PointCloud extends MeshInstance3D:
 	var cloud:PackedVector3Array = []
 	var mat = StandardMaterial3D.new()
@@ -61,4 +66,13 @@ class LineSegment extends MeshInstance3D:
 		mesh_imm.surface_end()
 		mesh_imm.surface_set_material(0,mat)
 		set_mesh(mesh_imm)
-		
+
+class D_Label extends Label:
+	var pos3D
+	var camera
+	func _init(t:String, p:Vector3, c:Camera3D):
+		set_text(t)
+		pos3D = p
+		camera = c
+	func update():
+		_set_position(camera.unproject_position(pos3D))

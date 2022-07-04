@@ -4,3 +4,7 @@
 
 [node name="Node3D" type="Node3D"]
 script = ExtResource( "1_7xseg" )
+
+[node name="Lables" type="Control" parent="."]
+offset_right = 40.0
+offset_bottom = 40.0

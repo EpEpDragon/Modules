@@ -15,6 +15,8 @@ func _process(delta):
 
 func _input(event):
 	handle_movement_rotate(event)
+	if event.is_action_pressed("quit"):
+		get_tree().quit()
 
 
 func handle_movement_translate(delta):

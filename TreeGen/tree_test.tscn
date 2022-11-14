@@ -1,8 +1,7 @@
-[gd_scene load_steps=7 format=3 uid="uid://dn1nk57bh8qgr"]
+[gd_scene load_steps=6 format=3 uid="uid://dn1nk57bh8qgr"]
 
 [ext_resource type="Script" path="res://Camera3D.gd" id="1_70agf"]
 [ext_resource type="Script" path="res://Tree.gd" id="3_dt4j7"]
-[ext_resource type="PackedScene" uid="uid://cxmhx7ooru1v7" path="res://DebugDraw.tscn" id="3_elnj8"]
 [ext_resource type="PackedScene" uid="uid://bx50orhkeawwo" path="res://meshing_test.tscn" id="4_0nn8s"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_tls7a"]
@@ -14,12 +13,12 @@
 [node name="Camera" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.91891)
 fov = 100.0
-script = ExtResource( "1_70agf" )
+script = ExtResource("1_70agf")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.5, -0.5)
 visible = false
-mesh = SubResource( "BoxMesh_tls7a" )
+mesh = SubResource("BoxMesh_tls7a")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.829147, 0.415169, -0.374367, 0.000992674, 0.668577, 0.743642, 0.559031, -0.61696, 0.553936, 0, 4.27844, 4.80873)
@@ -28,7 +27,7 @@ transform = Transform3D(0.829147, 0.415169, -0.374367, 0.000992674, 0.668577, 0.
 transform = Transform3D(-0.812122, 0.434445, -0.389507, 0.577123, 0.499752, -0.645892, -0.0859475, -0.749337, -0.656588, 0.769888, 4.27844, 4.80873)
 
 [node name="Tree" type="Node" parent="."]
-script = ExtResource( "3_dt4j7" )
+script = ExtResource("3_dt4j7")
 scale_factor = 0.62
 len_vari = 0.137
 branch_angle = 25
@@ -37,15 +36,10 @@ iterations = 4
 axiom = "X"
 width = 2
 
-[node name="DebugDraw" parent="." instance=ExtResource( "3_elnj8" )]
-visible = false
-camera_path = NodePath("../Camera")
-draw_fov = 50
-
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
 transform = Transform3D(42.9906, 0, 0, 0, 1, 0, 0, 0, 38.09, 0, 0, 0)
 visible = false
-mesh = SubResource( "PlaneMesh_j4kke" )
+mesh = SubResource("PlaneMesh_j4kke")
 
-[node name="Node3D" parent="." instance=ExtResource( "4_0nn8s" )]
+[node name="Node3D" parent="." instance=ExtResource("4_0nn8s")]
 visible = false

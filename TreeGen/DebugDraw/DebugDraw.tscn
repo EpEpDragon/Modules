@@ -3,8 +3,10 @@
 [ext_resource type="Script" path="res://DebugDraw/DebugDraw.gd" id="1_7xseg"]
 
 [node name="Node3D" type="Node3D"]
-script = ExtResource( "1_7xseg" )
+script = ExtResource("1_7xseg")
 
 [node name="Lables" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0

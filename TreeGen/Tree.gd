@@ -51,19 +51,19 @@ var move_draw = func():
 
 # Rotate branch normal positive
 var re_angle = func():
-	direction = direction.rotated(branch_normal, deg2rad(branch_angle))
+	direction = direction.rotated(branch_normal, deg_to_rad(branch_angle))
 
 # Rotate branch normal negative
 var de_angle = func():
-	direction = direction.rotated(branch_normal, -deg2rad(branch_angle))
+	direction = direction.rotated(branch_normal, -deg_to_rad(branch_angle))
 
 # Rotate branch diraction positive
 var re_rotate = func():
-	branch_normal = branch_normal.rotated(direction, deg2rad(rot_angle))
+	branch_normal = branch_normal.rotated(direction, deg_to_rad(rot_angle))
 
 # Rotate branch diraction negative
 var de_rotate = func():
-	branch_normal = branch_normal.rotated(direction, -deg2rad(rot_angle))
+	branch_normal = branch_normal.rotated(direction, -deg_to_rad(rot_angle))
 
 # Push current state, add path for branch
 var push = func():
@@ -102,11 +102,11 @@ var var_leng = func():
 
 # Vary branch normal by random amount
 var var_br_ang = func():
-	direction = direction.rotated(branch_normal, -deg2rad(branch_angle*(randf()-0.5)*2*ang_vari))
+	direction = direction.rotated(branch_normal, -deg_to_rad(branch_angle*(randf()-0.5)*2*ang_vari))
 
 # Vary branch diraction by random amount
 var var_rot = func():
-	branch_normal = branch_normal.rotated(direction, deg2rad(rot_angle)*(randf()-0.5)*2*ang_vari)
+	branch_normal = branch_normal.rotated(direction, deg_to_rad(rot_angle)*(randf()-0.5)*2*ang_vari)
 
 # Wind bias, grow away from wind vector
 var var_wind = func():

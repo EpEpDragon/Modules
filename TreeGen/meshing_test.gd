@@ -12,7 +12,7 @@ var point_cloud = DebugDraw.new_point_cloud(Vector3.ZERO, 5, Color.GREEN)
 var point_cloud2 = DebugDraw.new_point_cloud(Vector3.ZERO, 10, Color.RED)
 var point_cloud3 = DebugDraw.new_point_cloud(Vector3.ZERO, 10, Color.ORANGE)
 var labels = []
-var color_arr = [Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.CYAN, Color.WHITE]
+var color_arr = [Color.RED, Color.GREEN, Color.BLUE, Color.PURPLE, Color.YELLOW, Color.CYAN, Color.BLUE, Color.PURPLE, Color.PINK, Color.RED]
 var line_segment = DebugDraw.new_line_seg(Vector3(0,0,-5),Color.RED)
 
 var tim1 = Time.get_unix_time_from_system()
@@ -238,23 +238,16 @@ func generate_mesh(data):
 #		indices.append(l_close[p_close_i])
 #		indices.append(l_close[p_close_i+1])
 	
-#	merge_loops(loops_ordered, arr)
+	loops_ordered = merge_loops(loops_ordered, arr)
 	######## DEBUG #########
 	var debug_edge_loops = []
 	#	point_cloud2.add_points(arr[Mesh.ARRAY_VERTEX][edge_loops[0]])
 	debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[0]))
-#	for p_i in range(edge_loops[0].size()):
-#			var pos = edge_loops[0][p_i]
-#			labels.append(DebugDraw.new_label(str(p_i),pos,$Camera))
-#			point_cloud2.add_point(pos)
-#			debug_edge_loops[-1].add_point(pos)
-#	#	debug_edge_loops[-1].add_points(arr[Mesh.ARRAY_VERTEX][edge_loops[0]])
-#	debug_edge_loops[-1].construct()
 	for l_i in range(loops_ordered.size()):
 		debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[l_i]))
 		for p_i in range(loops_ordered[l_i].size()):
 			var pos = arr[Mesh.ARRAY_VERTEX][loops_ordered[l_i][p_i]]
-			labels.append(DebugDraw.new_label(str(p_i),pos,$Camera))
+#			labels.append(DebugDraw.new_label(str(p_i),pos,$Camera))
 			point_cloud2.add_point(pos)
 			debug_edge_loops[-1].add_point(pos)
 		debug_edge_loops[-1].construct()
@@ -299,32 +292,47 @@ func order_loop(loop, arr):
 
 func merge_loops(loops, arr):
 	var merged_loops = [] + loops # Value copy
+	
+	# Merge flags for points
+	var merge_flags = []
+	merge_flags.resize(merged_loops.size())
+	for i in range(merge_flags.size()):
+		var blank = []
+		blank.resize(merged_loops[i].size())
+		blank.fill(false)
+		merge_flags[i] = blank
+	
 	# Iterate existing loops 
-	for l_i in range(loops.size()): 
-		merged_loops.append([])
-		# Iterate points in loop
-		for p_i in range(loops[l_i].size()):
+	for l_i in range(5): 
+		# Iterate points in loops
+		for p_i in range(merged_loops[l_i].size()):
+			if merge_flags[l_i][p_i]:
+				continue
 			var short = INF
-			var sp_i
-			var merge_vert
+			var sp_i = null
+			var point_merged = false
 			# Iterate through other loops
-			for lc_i in range(merged_loops.size()-l_i):
+			for lc_i in range(merged_loops.size()-l_i-1):
 				# Iterate points 
-				for pc_i in range(merged_loops[lc_i+l_i].size()):
+				for pc_i in range(merged_loops[lc_i+l_i+1].size()):
 					# Compare points, check that it is not in current loop (because of merge)
-					if !loops[l_i].has(merged_loops[lc_i+l_i][pc_i]):
-						var dist = arr[Mesh.ARRAY_VERTEX][loops[l_i][p_i]].distance_squared_to(arr[Mesh.ARRAY_VERTEX][merged_loops[lc_i+l_i][pc_i]])
-						if dist < short:
-							short = dist
-							sp_i = [lc_i+l_i, pc_i]
-			merge_vert = (arr[Mesh.ARRAY_VERTEX][loops[l_i][p_i]] - arr[Mesh.ARRAY_VERTEX][merged_loops[sp_i[0]][sp_i[1]]])/2 + arr[Mesh.ARRAY_VERTEX][merged_loops[sp_i[0]][sp_i[1]]]
-			# Add merge point to verts
-			arr[Mesh.ARRAY_VERTEX].append(merge_vert)
-			# Add merge point to merged loops
-			merged_loops[-1].append(arr[Mesh.ARRAY_VERTEX].size()-1)
-			# Change reference in both loops to merge point
-#			loops[l_i][p_i] = arr[Mesh.ARRAY_VERTEX].size()-1
-#			loops[sp_i[0]][sp_i[1]] = arr[Mesh.ARRAY_VERTEX].size()-1
+					if merge_flags[lc_i+l_i+1][pc_i]:
+						continue
+					var dist = arr[Mesh.ARRAY_VERTEX][merged_loops[l_i][p_i]].distance_squared_to(arr[Mesh.ARRAY_VERTEX][merged_loops[lc_i+l_i+1][pc_i]]) + arr[Mesh.ARRAY_VERTEX][merged_loops[l_i][p_i-1]].distance_squared_to(arr[Mesh.ARRAY_VERTEX][merged_loops[lc_i+l_i+1][pc_i]])
+					if dist < short:
+						short = dist
+						sp_i = [lc_i+l_i+1, pc_i]
+			if sp_i != null:
+				var merge_vert = (arr[Mesh.ARRAY_VERTEX][merged_loops[l_i][p_i]] - arr[Mesh.ARRAY_VERTEX][merged_loops[sp_i[0]][sp_i[1]]])/2 + arr[Mesh.ARRAY_VERTEX][merged_loops[sp_i[0]][sp_i[1]]]
+				# Add merge point to verts
+				arr[Mesh.ARRAY_VERTEX].append(merge_vert)
+				# Add merge point to merged loops
+	#			merged_loops[-1].append(arr[Mesh.ARRAY_VERTEX].size()-1)
+				# Change reference in both loops to merge point
+				merged_loops[l_i][p_i] = arr[Mesh.ARRAY_VERTEX].size()-1
+				merged_loops[sp_i[0]][sp_i[1]] = arr[Mesh.ARRAY_VERTEX].size()-1
+				merge_flags[l_i][p_i] = true
+				merge_flags[sp_i[0]][sp_i[1]] = true
 	return merged_loops
 
 

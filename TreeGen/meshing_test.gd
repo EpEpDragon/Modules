@@ -12,7 +12,7 @@ var point_cloud = DebugDraw.new_point_cloud(Vector3.ZERO, 5, Color.GREEN)
 var point_cloud2 = DebugDraw.new_point_cloud(Vector3.ZERO, 10, Color.RED)
 var point_cloud3 = DebugDraw.new_point_cloud(Vector3.ZERO, 10, Color.ORANGE)
 var labels = []
-var color_arr = [Color.RED, Color.GREEN, Color.YELLOW, Color.CYAN, Color.WHITE]
+var color_arr = [Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.CYAN, Color.WHITE]
 var line_segment = DebugDraw.new_line_seg(Vector3(0,0,-5),Color.RED)
 
 var tim1 = Time.get_unix_time_from_system()
@@ -91,15 +91,20 @@ func generate_vertices(curves,r):
 			
 			prev1 = s_pos1[s_i] # Previous disc position, use to calc normal
 			var p1 = gen_circle(s_pos1[s_i], r,n1,circ_res) # Points on current disc
-			# Add entry loop to edge loops
-			if c_i1 == 0 && s_i == 0:
-				entry_loop = p1
-				
+			
 			var use_point:Array[bool] = []
 			# Initialise flag array
 			for i in p1:
 				use_point.append(true)
-				
+			
+			var disc_points = []
+			disc_points.resize(p1.size())
+			
+			# HACK Entry loop to edge loops, continues at bottom
+			if c_i1 == 0 && s_i == 0: 
+				for i in range(p1.size()):
+					entry_loop = []+p1
+			
 			# Check, and flag, points on current disc against spheres on all other branches 
 			for c_i2 in range(curves.size()):
 				if c_i1 != c_i2:
@@ -109,8 +114,6 @@ func generate_vertices(curves,r):
 						if is_point_in_sphere(p1[p_i],s_pos2[s_i2],r+padd):
 							use_point[p_i] = false
 			
-			var disc_points = []
-			disc_points.resize(p1.size())
 			# Add points to disc based checks
 			for i in range(use_point.size()):
 				# Flag array check
@@ -121,7 +124,12 @@ func generate_vertices(curves,r):
 					index += 1
 			# Add disc to current branch
 			branches[c_i1].append([disc_points, use_point])
-			
+	
+	# HACK Entry loop finish
+	for i in range(entry_loop.size()):
+		verts.append(entry_loop[i])
+		entry_loop[i] = verts.size()-1
+	
 	arr[Mesh.ARRAY_VERTEX] = verts
 	arr[Mesh.ARRAY_NORMAL] = normals
 	var tim2 = Time.get_unix_time_from_system()
@@ -202,9 +210,10 @@ func generate_mesh(data):
 	
 	# Order loops
 	var loops_ordered = []
-	loops_ordered.resize(edge_loops.size()-1)
+	loops_ordered.resize(edge_loops.size())
+	loops_ordered[0] = edge_loops[0]
 	for l in range(edge_loops.size()-1):
-		loops_ordered[l-1] = order_loop(edge_loops[l+1], arr)
+		loops_ordered[l+1] = order_loop(edge_loops[l+1], arr)
 	var l = loops_ordered[0]
 	print(loops_ordered)
 	
@@ -229,19 +238,20 @@ func generate_mesh(data):
 #		indices.append(l_close[p_close_i])
 #		indices.append(l_close[p_close_i+1])
 	
+#	merge_loops(loops_ordered, arr)
 	######## DEBUG #########
 	var debug_edge_loops = []
 	#	point_cloud2.add_points(arr[Mesh.ARRAY_VERTEX][edge_loops[0]])
 	debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[0]))
-	for p_i in range(edge_loops[0].size()):
-			var pos = edge_loops[0][p_i]
-			labels.append(DebugDraw.new_label(str(p_i),pos,$Camera))
-			point_cloud2.add_point(pos)
-			debug_edge_loops[-1].add_point(pos)
-	#	debug_edge_loops[-1].add_points(arr[Mesh.ARRAY_VERTEX][edge_loops[0]])
-	debug_edge_loops[-1].construct()
+#	for p_i in range(edge_loops[0].size()):
+#			var pos = edge_loops[0][p_i]
+#			labels.append(DebugDraw.new_label(str(p_i),pos,$Camera))
+#			point_cloud2.add_point(pos)
+#			debug_edge_loops[-1].add_point(pos)
+#	#	debug_edge_loops[-1].add_points(arr[Mesh.ARRAY_VERTEX][edge_loops[0]])
+#	debug_edge_loops[-1].construct()
 	for l_i in range(loops_ordered.size()):
-		debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[l_i+1]))
+		debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[l_i]))
 		for p_i in range(loops_ordered[l_i].size()):
 			var pos = arr[Mesh.ARRAY_VERTEX][loops_ordered[l_i][p_i]]
 			labels.append(DebugDraw.new_label(str(p_i),pos,$Camera))
@@ -251,16 +261,16 @@ func generate_mesh(data):
 	########################
 	
 	# Mesh
-	arr[Mesh.ARRAY_INDEX] = indices
-	point_cloud.add_points(arr[Mesh.ARRAY_VERTEX])
-#	point_cloud.construct()
-	point_cloud2.construct()
-#	point_cloud3.construct()
-#	debug_line.construct()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arr)
-	mesh_inst.set_mesh(mesh)
-#	ResourceSaver.save("res://TestMesh.", mesh)
-	add_child(mesh_inst)
+#	arr[Mesh.ARRAY_INDEX] = indices
+#	point_cloud.add_points(arr[Mesh.ARRAY_VERTEX])
+##	point_cloud.construct()
+#	point_cloud2.construct()
+##	point_cloud3.construct()
+##	debug_line.construct()
+#	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arr)
+#	mesh_inst.set_mesh(mesh)
+##	ResourceSaver.save("res://TestMesh.", mesh)
+#	add_child(mesh_inst)
 	var tim2 = Time.get_unix_time_from_system()
 	print("generate_mesh: " + str((tim2-tim1)*1000) + "ms")
 
@@ -287,6 +297,37 @@ func order_loop(loop, arr):
 	return ordered_loop
 
 
+func merge_loops(loops, arr):
+	var merged_loops = [] + loops # Value copy
+	# Iterate existing loops 
+	for l_i in range(loops.size()): 
+		merged_loops.append([])
+		# Iterate points in loop
+		for p_i in range(loops[l_i].size()):
+			var short = INF
+			var sp_i
+			var merge_vert
+			# Iterate through other loops
+			for lc_i in range(merged_loops.size()-l_i):
+				# Iterate points 
+				for pc_i in range(merged_loops[lc_i+l_i].size()):
+					# Compare points, check that it is not in current loop (because of merge)
+					if !loops[l_i].has(merged_loops[lc_i+l_i][pc_i]):
+						var dist = arr[Mesh.ARRAY_VERTEX][loops[l_i][p_i]].distance_squared_to(arr[Mesh.ARRAY_VERTEX][merged_loops[lc_i+l_i][pc_i]])
+						if dist < short:
+							short = dist
+							sp_i = [lc_i+l_i, pc_i]
+			merge_vert = (arr[Mesh.ARRAY_VERTEX][loops[l_i][p_i]] - arr[Mesh.ARRAY_VERTEX][merged_loops[sp_i[0]][sp_i[1]]])/2 + arr[Mesh.ARRAY_VERTEX][merged_loops[sp_i[0]][sp_i[1]]]
+			# Add merge point to verts
+			arr[Mesh.ARRAY_VERTEX].append(merge_vert)
+			# Add merge point to merged loops
+			merged_loops[-1].append(arr[Mesh.ARRAY_VERTEX].size()-1)
+			# Change reference in both loops to merge point
+#			loops[l_i][p_i] = arr[Mesh.ARRAY_VERTEX].size()-1
+#			loops[sp_i[0]][sp_i[1]] = arr[Mesh.ARRAY_VERTEX].size()-1
+	return merged_loops
+
+
 func is_point_in_sphere(p_pos, s_pos, r):
 	return (p_pos - s_pos).length() < r
 
@@ -294,7 +335,7 @@ func is_point_in_sphere(p_pos, s_pos, r):
 func gen_circle(pos:Vector3, r:float, n:Vector3, res:int):
 	var rot = 0
 	var step = PI/2/res
-	var points:PackedVector3Array = []
+	var points = []
 	var point = (Vector3.UP).cross(n).cross(n)
 	if (point == Vector3.ZERO): point = r*Vector3.FORWARD #will need info to align this correctly
 	else: point *=  r/point.length()

@@ -38,7 +38,7 @@ class PointCloud extends MeshInstance3D:
 	func construct():
 		var mesh_imm = ImmediateMesh.new()
 		mesh_imm.surface_begin(Mesh.PRIMITIVE_POINTS)
-		mesh_imm.surface_set_normal(Vector3(0,0,1))
+		mesh_imm.surface_set_normal(Vector3(0,0,-1))
 		for p in cloud:
 			mesh_imm.surface_add_vertex(p)
 		mesh_imm.surface_end()

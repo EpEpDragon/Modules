@@ -33,7 +33,9 @@ point_count = 2
 
 [node name="Node3D" type="Node3D"]
 script = ExtResource("1_l5t8y")
-padding = 0.039
+bake_interval = 0.1
+circ_res = 10
+padding = 0.003
 
 [node name="Camera" type="Camera3D" parent="."]
 transform = Transform3D(0.854658, 0.0187987, 0.518851, 0, 0.999344, -0.0362076, -0.519191, 0.0309451, 0.854098, 1.56701, 0.859062, 1.88958)
@@ -54,4 +56,4 @@ curve = SubResource("Curve3D_tsb62")
 curve = SubResource("Curve3D_lnyg2")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.282753, 2.44687, 7.47243)
+transform = Transform3D(1, 0, 0, 0, -1, 0.000663193, 0, -0.000663193, -1, 0, 0, -5.25923)

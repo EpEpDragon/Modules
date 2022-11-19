@@ -15,11 +15,13 @@ var labels = []
 var color_arr = [Color.RED, Color.GREEN, Color.YELLOW, Color.CYAN, Color.WHITE]
 var line_segment = DebugDraw.new_line_seg(Vector3(0,0,-5),Color.RED)
 
-
+var tim1 = Time.get_unix_time_from_system()
 func _ready():
 #	get_viewport().debug_draw = Viewport.DEBUG_DRAW_WIREFRAME
 	var curves = [$Path3D.get_curve(), $Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve()]
-	generate_mesh(curves)
+	# Get vertecices ordered by branch and disc
+	var data = generate_vertices(curves,0.5)
+	generate_mesh(data)
 	
 #	var portals = generate_portals(curves,0.1,0.1)
 #	for p in portals:
@@ -61,8 +63,6 @@ func _process(delta):
 # disc: vertex disc index to global index
 # arr: Mesh array
 func generate_vertices(curves,r):
-	var tim1 = Time.get_unix_time_from_system()
-	
 	# Array mesh data
 	var arr = []
 	arr.resize(Mesh.ARRAY_MAX)
@@ -92,8 +92,8 @@ func generate_vertices(curves,r):
 			prev1 = s_pos1[s_i] # Previous disc position, use to calc normal
 			var p1 = gen_circle(s_pos1[s_i], r,n1,circ_res) # Points on current disc
 			# Add entry loop to edge loops
-#			if c_i1 == 0 && s_i == 0:
-#				entry_loop = p1
+			if c_i1 == 0 && s_i == 0:
+				entry_loop = p1
 				
 			var use_point:Array[bool] = []
 			# Initialise flag array
@@ -121,19 +121,20 @@ func generate_vertices(curves,r):
 					index += 1
 			# Add disc to current branch
 			branches[c_i1].append([disc_points, use_point])
+			
 	arr[Mesh.ARRAY_VERTEX] = verts
 	arr[Mesh.ARRAY_NORMAL] = normals
 	var tim2 = Time.get_unix_time_from_system()
 	print("generate_vertices: " + str((tim2-tim1)*1000) + "ms")
+#	point_cloud.set_cloud(verts)
+#	point_cloud.construct()
+#	print(entry_loop)
 	return [arr, branches, entry_loop]
 
 
 # Generate a mesh from the given curves
-func generate_mesh(curves):
+func generate_mesh(data):
 	var tim1 = Time.get_unix_time_from_system()
-	
-	# Get vertecices ordered by branch and disc
-	var data = generate_vertices(curves,0.5)
 	
 	var arr = data[0]
 	var branches = data[1]
@@ -148,7 +149,6 @@ func generate_mesh(curves):
 		edge_loops.append(PackedInt32Array())
 		for d_i in range(branches[b_i].size()-1):
 			# Identify edge loops
-			
 			for i in range(branches[b_i][d_i][1].size()):
 				if branches[b_i][d_i][1][i]:
 					var i_next = i + 1
@@ -199,37 +199,46 @@ func generate_mesh(curves):
 #			indices.append(l[p_i])
 #			indices.append(l_close[p_close_i])
 #			indices.append(l_close[p_close_i+1])
+	
+	# Order loops
 	var loops_ordered = []
 	loops_ordered.resize(edge_loops.size()-1)
 	for l in range(edge_loops.size()-1):
 		loops_ordered[l-1] = order_loop(edge_loops[l+1], arr)
 	var l = loops_ordered[0]
-	for p_i in range(l.size()-1):
-		var min_dist = INF
-		var p_close_i
-		var l_close
-		for lc in loops_ordered:
-			if l != lc:
-				for pc_i in range(lc.size()-1):
-					var dist = arr[Mesh.ARRAY_VERTEX][lc[pc_i]].distance_squared_to(arr[Mesh.ARRAY_VERTEX][l[p_i]])
-					if dist < min_dist:
-						min_dist = dist
-						p_close_i = pc_i
-						l_close = lc
-		indices.append(l[p_i])
-		indices.append(l_close[p_close_i])
-		indices.append(l[p_i+1])
-		
-		
-		indices.append(l[p_i+1])
-		indices.append(l_close[p_close_i])
-		indices.append(l_close[p_close_i+1])
+	print(loops_ordered)
+	
+	# Add edge loops
+#	for p_i in range(l.size()-1):
+#		var min_dist = INF
+#		var p_close_i
+#		var l_close
+#		for lc in loops_ordered:
+#			if l != lc:
+#				for pc_i in range(lc.size()-1):
+#					var dist = arr[Mesh.ARRAY_VERTEX][lc[pc_i]].distance_squared_to(arr[Mesh.ARRAY_VERTEX][l[p_i]])
+#					if dist < min_dist:
+#						min_dist = dist
+#						p_close_i = pc_i
+#						l_close = lc
+#		indices.append(l[p_i])
+#		indices.append(l_close[p_close_i])
+#		indices.append(l[p_i+1])
+#
+#		indices.append(l[p_i+1])
+#		indices.append(l_close[p_close_i])
+#		indices.append(l_close[p_close_i+1])
 	
 	######## DEBUG #########
 	var debug_edge_loops = []
-#	point_cloud2.add_points(arr[Mesh.ARRAY_VERTEX][edge_loops[0]])
+	#	point_cloud2.add_points(arr[Mesh.ARRAY_VERTEX][edge_loops[0]])
 	debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[0]))
-#	debug_edge_loops[-1].add_points(arr[Mesh.ARRAY_VERTEX][edge_loops[0]])
+	for p_i in range(edge_loops[0].size()):
+			var pos = edge_loops[0][p_i]
+			labels.append(DebugDraw.new_label(str(p_i),pos,$Camera))
+			point_cloud2.add_point(pos)
+			debug_edge_loops[-1].add_point(pos)
+	#	debug_edge_loops[-1].add_points(arr[Mesh.ARRAY_VERTEX][edge_loops[0]])
 	debug_edge_loops[-1].construct()
 	for l_i in range(loops_ordered.size()):
 		debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[l_i+1]))
@@ -241,7 +250,7 @@ func generate_mesh(curves):
 		debug_edge_loops[-1].construct()
 	########################
 	
-	
+	# Mesh
 	arr[Mesh.ARRAY_INDEX] = indices
 	point_cloud.add_points(arr[Mesh.ARRAY_VERTEX])
 #	point_cloud.construct()
@@ -254,6 +263,7 @@ func generate_mesh(curves):
 	add_child(mesh_inst)
 	var tim2 = Time.get_unix_time_from_system()
 	print("generate_mesh: " + str((tim2-tim1)*1000) + "ms")
+
 
 func order_loop(loop, arr):
 	var ordered_loop = PackedInt32Array()
@@ -276,6 +286,7 @@ func order_loop(loop, arr):
 		
 	return ordered_loop
 
+
 func is_point_in_sphere(p_pos, s_pos, r):
 	return (p_pos - s_pos).length() < r
 
@@ -294,7 +305,6 @@ func gen_circle(pos:Vector3, r:float, n:Vector3, res:int):
 	return points
 
 ####################################### Debug use functions ###################################
-
 func generate_cloud(curves,r):
 	for c in curves:
 		c.set_bake_interval(bake_interval)
@@ -321,6 +331,7 @@ func generate_cloud(curves,r):
 				if use_point[i]:
 					cloud.push_back(p1[i])
 	return cloud
+
 
 func generate_line_segments(curves,r):
 	for c in curves:

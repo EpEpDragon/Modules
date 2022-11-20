@@ -76,7 +76,7 @@ func generate_vertices(curves,r):
 		c.set_bake_interval(bake_interval)
 	
 	var n_b = Vector3(0,1,0)
-	
+	var entry_norms = PackedVector3Array()
 	# Loop through each curve
 	for c_i1 in range(curves.size()):
 		branches.append([])
@@ -103,7 +103,8 @@ func generate_vertices(curves,r):
 			# HACK Entry loop to edge loops, continues at bottom
 			if c_i1 == 0 && s_i == 0: 
 				for i in range(p1.size()):
-					entry_loop = []+p1
+					entry_loop = [] + p1
+					entry_norms.append((p1[i]-s_pos1[s_i]).normalized())
 			
 			# Check, and flag, points on current disc against spheres on all other branches 
 			for c_i2 in range(curves.size()):
@@ -128,6 +129,7 @@ func generate_vertices(curves,r):
 	# HACK Entry loop finish
 	for i in range(entry_loop.size()):
 		verts.append(entry_loop[i])
+		normals.append(entry_norms[i])
 		entry_loop[i] = verts.size()-1
 	
 	arr[Mesh.ARRAY_VERTEX] = verts
@@ -215,7 +217,6 @@ func generate_mesh(data):
 	for l in range(edge_loops.size()-1):
 		loops_ordered[l+1] = order_loop(edge_loops[l+1], arr)
 	var l = loops_ordered[0]
-	print(loops_ordered)
 	
 	# Add edge loops
 #	for p_i in range(l.size()-1):
@@ -238,7 +239,7 @@ func generate_mesh(data):
 #		indices.append(l_close[p_close_i])
 #		indices.append(l_close[p_close_i+1])
 	
-	loops_ordered = merge_loops(loops_ordered, arr)
+#	loops_ordered = merge_loops(loops_ordered, arr)
 	######## DEBUG #########
 	var debug_edge_loops = []
 	#	point_cloud2.add_points(arr[Mesh.ARRAY_VERTEX][edge_loops[0]])
@@ -254,16 +255,16 @@ func generate_mesh(data):
 	########################
 	
 	# Mesh
-#	arr[Mesh.ARRAY_INDEX] = indices
-#	point_cloud.add_points(arr[Mesh.ARRAY_VERTEX])
-##	point_cloud.construct()
-#	point_cloud2.construct()
-##	point_cloud3.construct()
-##	debug_line.construct()
-#	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arr)
-#	mesh_inst.set_mesh(mesh)
-##	ResourceSaver.save("res://TestMesh.", mesh)
-#	add_child(mesh_inst)
+	arr[Mesh.ARRAY_INDEX] = indices
+	point_cloud.add_points(arr[Mesh.ARRAY_VERTEX])
+#	point_cloud.construct()
+	point_cloud2.construct()
+#	point_cloud3.construct()
+#	debug_line.construct()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arr)
+	mesh_inst.set_mesh(mesh)
+#	ResourceSaver.save("res://TestMesh.", mesh)
+	add_child(mesh_inst)
 	var tim2 = Time.get_unix_time_from_system()
 	print("generate_mesh: " + str((tim2-tim1)*1000) + "ms")
 

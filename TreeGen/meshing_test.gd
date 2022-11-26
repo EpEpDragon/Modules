@@ -175,7 +175,7 @@ func generate_mesh(data):
 						indices.append(branches[b_i][d_i][0][i_next])
 						indices.append(branches[b_i][d_i+1][0][i])
 						indices.append(branches[b_i][d_i+1][0][i_next])
-					# Remove concave vertex from edge loop by filling triangle 
+					# Remove jagged edges by filling with triangle 
 					if (branches[b_i][d_i-1][1][i] && branches[b_i][d_i][1][i-1] 
 						&& branches[b_i][d_i][1][i_next]):
 							if not branches[b_i][d_i-1][1][i_next]:
@@ -192,23 +192,6 @@ func generate_mesh(data):
 						not branches[b_i][d_i][1][i-1] ||
 						not branches[b_i][d_i+1][1][i]):
 							edge_loops[b_i+1].append(branches[b_i][d_i][0][i])
-	# Stitch mesh
-#	for l in edge_loops:
-#		for p_i in range(l.size()):
-#			var min_dist = INF
-#			var p_close_i
-#			var l_close
-#			for lc in edge_loops:
-#				if l != lc:
-#					for pc_i in range(lc.size()-1):
-#						var dist = arr[Mesh.ARRAY_VERTEX][lc[pc_i]].distance_squared_to(arr[Mesh.ARRAY_VERTEX][l[p_i]])
-#						if dist < min_dist:
-#							min_dist = dist
-#							p_close_i = pc_i
-#							l_close = lc
-#			indices.append(l[p_i])
-#			indices.append(l_close[p_close_i])
-#			indices.append(l_close[p_close_i+1])
 	
 	# Order loops
 	var loops_ordered = []
@@ -218,40 +201,19 @@ func generate_mesh(data):
 		loops_ordered[l+1] = order_loop(edge_loops[l+1], arr)
 	var l = loops_ordered[0]
 	
-	# Add edge loops
-#	for p_i in range(l.size()-1):
-#		var min_dist = INF
-#		var p_close_i
-#		var l_close
-#		for lc in loops_ordered:
-#			if l != lc:
-#				for pc_i in range(lc.size()-1):
-#					var dist = arr[Mesh.ARRAY_VERTEX][lc[pc_i]].distance_squared_to(arr[Mesh.ARRAY_VERTEX][l[p_i]])
-#					if dist < min_dist:
-#						min_dist = dist
-#						p_close_i = pc_i
-#						l_close = lc
-#		indices.append(l[p_i])
-#		indices.append(l_close[p_close_i])
-#		indices.append(l[p_i+1])
-#
-#		indices.append(l[p_i+1])
-#		indices.append(l_close[p_close_i])
-#		indices.append(l_close[p_close_i+1])
-	
-#	loops_ordered = merge_loops(loops_ordered, arr)
+	loops_ordered = merge_loops(loops_ordered, arr, indices)
 	######## DEBUG #########
-	var debug_edge_loops = []
-	#	point_cloud2.add_points(arr[Mesh.ARRAY_VERTEX][edge_loops[0]])
-	debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[0]))
-	for l_i in range(loops_ordered.size()):
-		debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[l_i]))
-		for p_i in range(loops_ordered[l_i].size()):
-			var pos = arr[Mesh.ARRAY_VERTEX][loops_ordered[l_i][p_i]]
-#			labels.append(DebugDraw.new_label(str(p_i),pos,$Camera))
-			point_cloud2.add_point(pos)
-			debug_edge_loops[-1].add_point(pos)
-		debug_edge_loops[-1].construct()
+#	var debug_edge_loops = []
+#	#	point_cloud2.add_points(arr[Mesh.ARRAY_VERTEX][edge_loops[0]])
+#	debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[0]))
+#	for l_i in range(loops_ordered.size()):
+#		debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[l_i]))
+#		for p_i in range(loops_ordered[l_i].size()):
+#			var pos = arr[Mesh.ARRAY_VERTEX][loops_ordered[l_i][p_i]]
+##			labels.append(DebugDraw.new_label(str(p_i),pos,$Camera))
+#			point_cloud2.add_point(pos)
+#			debug_edge_loops[-1].add_point(pos)
+#		debug_edge_loops[-1].construct()
 	########################
 	
 	# Mesh
@@ -291,7 +253,7 @@ func order_loop(loop, arr):
 	return ordered_loop
 
 
-func merge_loops(loops, arr):
+func merge_loops(loops, arr, indices):
 	var merged_loops = [] + loops # Value copy
 	
 	# Merge flags for points
@@ -320,18 +282,23 @@ func merge_loops(loops, arr):
 					if merge_flags[lc_i+l_i+1][pc_i]:
 						continue
 					var dist = arr[Mesh.ARRAY_VERTEX][merged_loops[l_i][p_i]].distance_squared_to(arr[Mesh.ARRAY_VERTEX][merged_loops[lc_i+l_i+1][pc_i]]) + arr[Mesh.ARRAY_VERTEX][merged_loops[l_i][p_i-1]].distance_squared_to(arr[Mesh.ARRAY_VERTEX][merged_loops[lc_i+l_i+1][pc_i]])
-					if dist < short:
+					if dist < short && dist < 0.25:
 						short = dist
 						sp_i = [lc_i+l_i+1, pc_i]
 			if sp_i != null:
 				var merge_vert = (arr[Mesh.ARRAY_VERTEX][merged_loops[l_i][p_i]] - arr[Mesh.ARRAY_VERTEX][merged_loops[sp_i[0]][sp_i[1]]])/2 + arr[Mesh.ARRAY_VERTEX][merged_loops[sp_i[0]][sp_i[1]]]
-				# Add merge point to verts
+				var merge_normal = (arr[Mesh.ARRAY_NORMAL][merged_loops[l_i][p_i]] + arr[Mesh.ARRAY_NORMAL][merged_loops[sp_i[0]][sp_i[1]]]).normalized()
+				
+				# Add merge point to array
 				arr[Mesh.ARRAY_VERTEX].append(merge_vert)
-				# Add merge point to merged loops
-	#			merged_loops[-1].append(arr[Mesh.ARRAY_VERTEX].size()-1)
-				# Change reference in both loops to merge point
+				arr[Mesh.ARRAY_NORMAL].append(merge_normal)
+				
+				# Change reference to merge point
+				Helpers.find_replace(indices, merged_loops[l_i][p_i], arr[Mesh.ARRAY_VERTEX].size()-1)
+				Helpers.find_replace(indices, merged_loops[sp_i[0]][sp_i[1]], arr[Mesh.ARRAY_VERTEX].size()-1)
 				merged_loops[l_i][p_i] = arr[Mesh.ARRAY_VERTEX].size()-1
 				merged_loops[sp_i[0]][sp_i[1]] = arr[Mesh.ARRAY_VERTEX].size()-1
+				# Set merge flags
 				merge_flags[l_i][p_i] = true
 				merge_flags[sp_i[0]][sp_i[1]] = true
 	return merged_loops

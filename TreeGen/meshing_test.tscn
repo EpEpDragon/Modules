@@ -42,7 +42,7 @@ padding = 0.003
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.859, 1.89)
 size = 2.0
 script = ExtResource("2_15jvw")
-movespeed = 0.796
+movespeed = 2.0
 
 [node name="Path3D" type="Path3D" parent="."]
 curve = SubResource("Curve3D_eum13")

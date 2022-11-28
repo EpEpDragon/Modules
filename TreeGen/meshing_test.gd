@@ -190,17 +190,17 @@ func generate_mesh(data):
 	
 	merge_loops(loops_ordered, arr, indices)
 	######## DEBUG #########
-#	var debug_edge_loops = []
-##	#	point_cloud2.add_points(arr[Mesh.ARRAY_VERTEX][edge_loops[0]])
-#	debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[0]))
-#	for l_i in range(loops_ordered.size()):
-#		debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[l_i]))
-#		for p_i in range(loops_ordered[l_i].size()):
-#			var pos = arr[Mesh.ARRAY_VERTEX][loops_ordered[l_i][p_i]]
-#			labels.append(DebugDraw.new_label(str(p_i),pos,$Camera))
-##			point_cloud2.add_point(pos)
-#			debug_edge_loops[-1].add_point(pos)
-#		debug_edge_loops[-1].construct()
+	var debug_edge_loops = []
+#	#	point_cloud2.add_points(arr[Mesh.ARRAY_VERTEX][edge_loops[0]])
+	debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[0]))
+	for l_i in range(loops_ordered.size()):
+		debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[l_i]))
+		for p_i in range(loops_ordered[l_i].size()):
+			var pos = arr[Mesh.ARRAY_VERTEX][loops_ordered[l_i][p_i]]
+			labels.append(DebugDraw.new_label(str(p_i),pos,$Camera))
+#			point_cloud2.add_point(pos)
+			debug_edge_loops[-1].add_point(pos)
+		debug_edge_loops[-1].construct()
 	########################
 	
 	# Mesh
@@ -265,8 +265,8 @@ func merge_loops(loops, arr, indices):
 					continue
 				
 				# DEBUG
-				if i == 1:
-					point_cloud3.add_point(arr[Mesh.ARRAY_VERTEX][loops[l_i][p_i]])
+#				if i == 1:
+#					point_cloud3.add_point(arr[Mesh.ARRAY_VERTEX][loops[l_i][p_i]])
 				
 				var short = INF
 				var sp_i = null
@@ -299,8 +299,8 @@ func merge_loops(loops, arr, indices):
 						arr[Mesh.ARRAY_NORMAL][loops[m[0]][m[1]]] = merge_normal
 					
 					# DEBUG
-					if i == 1:
-						point_cloud.add_point(merge_vert)
+#					if i == 1:
+#						point_cloud.add_point(merge_vert)
 	
 	# Patch holes
 	var patch_indices:PackedInt32Array = []
@@ -310,14 +310,19 @@ func merge_loops(loops, arr, indices):
 			if merge_points[l_i][p_i][0][0] != merge_points[l_i][p_i-1][0][0]:
 				# Find increment direction of connected loop
 				var inc = 0
-				var i = 1
+				var i = p_i
 				while inc == 0:
-					inc = merge_points[l_i][p_i][0][1] - merge_points[l_i][p_i+i][0][1]
+					inc = merge_points[l_i][p_i][0][1] - merge_points[l_i][i][0][1]
 					i += 1
+					if i > merge_points[l_i].size()-1:
+						i = 0
 				inc = inc/abs(inc)
 
 				# Make triangle
-				var points = [loops[l_i][p_i], loops[l_i][p_i-1], loops[merge_points[l_i][p_i][0][0]][merge_points[l_i][p_i][0][1] + inc]]
+				i = merge_points[l_i][p_i][0][1] + inc
+				if i > loops[merge_points[l_i][p_i][0][0]].size()-1:
+					i = 0
+				var points = [loops[l_i][p_i], loops[l_i][p_i-1], loops[merge_points[l_i][p_i][0][0]][i]]
 				var triangle = Helpers.make_triangle(arr, points)
 				# Check if triangle already in mesh
 				if !Helpers.contains_triangle(triangle, patch_indices):

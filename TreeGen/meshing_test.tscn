@@ -5,7 +5,7 @@
 
 [sub_resource type="Curve3D" id="Curve3D_eum13"]
 _data = {
-"points": PackedVector3Array(0, -0.5, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, -0.669736, 0.597713, -0.317717, 0, 3.568, 0),
+"points": PackedVector3Array(0, -0.5, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, -0.669736, 0.597713, -0.317717, 0.992358, 3.58374, -0.320798),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -19,7 +19,7 @@ point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_tsb62"]
 _data = {
-"points": PackedVector3Array(0, -0.5, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, 1.23841, 2.09723, -1.43907),
+"points": PackedVector3Array(-0.0151861, -0.887542, 0.658426, 0.0151861, 0.887542, -0.658426, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, 0.272709, 1.01059, -3.07265),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2

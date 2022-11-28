@@ -12,7 +12,7 @@ point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_7gku2"]
 _data = {
-"points": PackedVector3Array(0.0655044, -0.807151, 0.17178, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, -1.83532, 1.82759, -0.226387),
+"points": PackedVector3Array(0.0655044, -0.807151, 0.17178, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, -1.41992, 2.50202, 0.589283),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2

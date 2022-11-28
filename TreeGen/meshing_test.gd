@@ -17,7 +17,6 @@ var line_segment = DebugDraw.new_line_seg(Vector3(0,0,-5),Color.RED)
 
 var tim1 = Time.get_unix_time_from_system()
 func _ready():
-#	get_viewport().debug_draw = Viewport.DEBUG_DRAW_WIREFRAME
 	var curves = [$Path3D.get_curve(), $Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve()]
 	# Get vertecices ordered by branch and disc
 	var data = generate_vertices(curves,0.5)
@@ -148,6 +147,9 @@ func generate_mesh(data):
 						indices.append(branches[b_i][d_i+1][0][i])
 						indices.append(branches[b_i][d_i+1][0][i_next])
 					# Remove jagged edges by filling with triangle 
+					var conn = (int(branches[b_i][d_i-1][1][i]) + int(branches[b_i][d_i-1][1][i-1]) + int(branches[b_i][d_i-1][1][i_next]) +
+								int(branches[b_i][d_i][1][i-1]) + int(branches[b_i][d_i][1][i_next]) + 
+								int(branches[b_i][d_i+1][1][i]) + int(branches[b_i][d_i+1][1][i-1]) + int(branches[b_i][d_i+1][1][i_next]))
 					if (branches[b_i][d_i-1][1][i] && branches[b_i][d_i][1][i-1] 
 						&& branches[b_i][d_i][1][i_next]):
 							if not branches[b_i][d_i-1][1][i_next]:
@@ -158,12 +160,25 @@ func generate_mesh(data):
 								indices.append(branches[b_i][d_i-1][0][i])
 								indices.append(branches[b_i][d_i][0][i-1])
 								indices.append(branches[b_i][d_i][0][i])
+							
 					# Edge loop
-					elif (not branches[b_i][d_i-1][1][i] || 
-						not branches[b_i][d_i][1][i_next] ||
-						not branches[b_i][d_i][1][i-1] ||
-						not branches[b_i][d_i+1][1][i]):
-							edge_loops[b_i+1].append(branches[b_i][d_i][0][i])
+#					elif ((not branches[b_i][d_i-1][1][i] || not branches[b_i][d_i+1][1][i]) &&
+#						(branches[b_i][d_i][1][i_next] && branches[b_i][d_i][1][i-1]) ||
+#						(branches[b_i][d_i][1][i_next] != branches[b_i][d_i][1][i-1])):
+#							edge_loops[b_i+1].append(branches[b_i][d_i][0][i])
+#					elif (not branches[b_i][d_i-1][1][i] || 
+#						not branches[b_i][d_i+1][1][i] ||
+#						not branches[b_i][d_i][1][i_next] ||
+#						not branches[b_i][d_i][1][i-1]):
+#							edge_loops[b_i+1].append(branches[b_i][d_i][0][i])
+#					elif not (branches[b_i][d_i-1][1][i] &&
+#							branches[b_i][d_i+1][1][i] &&
+#							branches[b_i][d_i][1][i_next] &&
+#							branches[b_i][d_i][1][i-1]):
+#								edge_loops[b_i+1].append(branches[b_i][d_i][0][i])
+					elif (conn > 2):
+						edge_loops[b_i+1].append(branches[b_i][d_i][0][i])
+#					edge_loops[b_i+1].append(branches[b_i][d_i][0][i])
 	
 	# Order loops
 	var loops_ordered = []
@@ -173,7 +188,7 @@ func generate_mesh(data):
 		loops_ordered[l+1] = order_loop(edge_loops[l+1], arr)
 	var l = loops_ordered[0]
 	
-	loops_ordered = merge_loops(loops_ordered, arr, indices)
+	merge_loops(loops_ordered, arr, indices)
 	######## DEBUG #########
 #	var debug_edge_loops = []
 ##	#	point_cloud2.add_points(arr[Mesh.ARRAY_VERTEX][edge_loops[0]])
@@ -182,7 +197,7 @@ func generate_mesh(data):
 #		debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[l_i]))
 #		for p_i in range(loops_ordered[l_i].size()):
 #			var pos = arr[Mesh.ARRAY_VERTEX][loops_ordered[l_i][p_i]]
-##			labels.append(DebugDraw.new_label(str(p_i),pos,$Camera))
+#			labels.append(DebugDraw.new_label(str(p_i),pos,$Camera))
 ##			point_cloud2.add_point(pos)
 #			debug_edge_loops[-1].add_point(pos)
 #		debug_edge_loops[-1].construct()
@@ -249,9 +264,9 @@ func merge_loops(loops, arr, indices):
 				if !merge_points[l_i][p_i].is_empty():
 					continue
 				
-#				# DEBUG
-#				if i == 1:
-#						point_cloud3.add_point(arr[Mesh.ARRAY_VERTEX][loops[l_i][p_i]])
+				# DEBUG
+				if i == 1:
+					point_cloud3.add_point(arr[Mesh.ARRAY_VERTEX][loops[l_i][p_i]])
 				
 				var short = INF
 				var sp_i = null
@@ -283,9 +298,9 @@ func merge_loops(loops, arr, indices):
 						arr[Mesh.ARRAY_VERTEX][loops[m[0]][m[1]]] = merge_vert
 						arr[Mesh.ARRAY_NORMAL][loops[m[0]][m[1]]] = merge_normal
 					
-#					# DEBUG
-#					if i == 1:
-#						point_cloud.add_point(merge_vert)
+					# DEBUG
+					if i == 1:
+						point_cloud.add_point(merge_vert)
 	
 	# Patch holes
 	var patch_indices:PackedInt32Array = []
@@ -294,9 +309,13 @@ func merge_loops(loops, arr, indices):
 		for p_i in range(loops[l_i].size()):
 			if merge_points[l_i][p_i][0][0] != merge_points[l_i][p_i-1][0][0]:
 				# Find increment direction of connected loop
-				var inc = merge_points[l_i][p_i][0][1] - merge_points[l_i][p_i+1][0][1]
+				var inc = 0
+				var i = 1
+				while inc == 0:
+					inc = merge_points[l_i][p_i][0][1] - merge_points[l_i][p_i+i][0][1]
+					i += 1
 				inc = inc/abs(inc)
-				
+
 				# Make triangle
 				var points = [loops[l_i][p_i], loops[l_i][p_i-1], loops[merge_points[l_i][p_i][0][0]][merge_points[l_i][p_i][0][1] + inc]]
 				var triangle = Helpers.make_triangle(arr, points)

@@ -17,6 +17,13 @@ func _input(event):
 	handle_movement_rotate(event)
 	if event.is_action_pressed("quit"):
 		get_tree().quit()
+	elif event.is_action_pressed("change_view"):
+		if get_viewport().debug_draw == Viewport.DEBUG_DRAW_DISABLED:
+			get_viewport().debug_draw = Viewport.DEBUG_DRAW_WIREFRAME
+		elif get_viewport().debug_draw == Viewport.DEBUG_DRAW_WIREFRAME:
+			get_viewport().debug_draw = Viewport.DEBUG_DRAW_OVERDRAW
+		else:
+			get_viewport().debug_draw = Viewport.DEBUG_DRAW_DISABLED
 
 
 func handle_movement_translate(delta):

@@ -5,28 +5,28 @@
 
 [sub_resource type="Curve3D" id="Curve3D_eum13"]
 _data = {
-"points": PackedVector3Array(0, -0.5, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, -0.669736, 0.597713, -0.317717, 0.992358, 3.58374, -0.320798),
+"points": PackedVector3Array(0, -0.5, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, -0.669736, 0.597713, -0.317717, 0.611479, 3.39534, -0.647222),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_7gku2"]
 _data = {
-"points": PackedVector3Array(0.0655044, -0.807151, 0.17178, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, -1.41992, 2.50202, 0.589283),
+"points": PackedVector3Array(0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, -0.401628, 2.48844, -1.95655),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_tsb62"]
 _data = {
-"points": PackedVector3Array(-0.0151861, -0.887542, 0.658426, 0.0151861, 0.887542, -0.658426, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, 0.272709, 1.01059, -3.07265),
+"points": PackedVector3Array(-0.0151861, -0.887542, 0.658426, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, -1.47983, 1.72298, -0.948815),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_lnyg2"]
 _data = {
-"points": PackedVector3Array(0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1.80448, 2.12378, 1.50154),
+"points": PackedVector3Array(0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, -0.636378, 2.12207, 1.49942),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2

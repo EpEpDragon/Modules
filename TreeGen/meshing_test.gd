@@ -17,7 +17,7 @@ var line_segment = DebugDraw.new_line_seg(Vector3(0,0,-5),Color.RED)
 
 var tim1 = Time.get_unix_time_from_system()
 func _ready():
-	var curves = [$Path3D.get_curve(), $Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve()]
+	var curves = [$Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve()]
 	# Get vertecices ordered by branch and disc
 	var data = generate_vertices(curves,0.5)
 	generate_mesh(data)
@@ -137,7 +137,7 @@ func generate_mesh(data):
 					if i == branches[b_i][d_i][1].size()-1:
 						i_next = 0
 					# Main mesh
-					if (branches[b_i][d_i][1][i_next]):
+					if (branches[b_i][d_i][1][i_next] && branches[b_i][d_i+1][1][i_next]):
 						# Triangle 1
 						indices.append(branches[b_i][d_i][0][i])
 						indices.append(branches[b_i][d_i+1][0][i])
@@ -160,25 +160,9 @@ func generate_mesh(data):
 								indices.append(branches[b_i][d_i-1][0][i])
 								indices.append(branches[b_i][d_i][0][i-1])
 								indices.append(branches[b_i][d_i][0][i])
-							
 					# Edge loop
-#					elif ((not branches[b_i][d_i-1][1][i] || not branches[b_i][d_i+1][1][i]) &&
-#						(branches[b_i][d_i][1][i_next] && branches[b_i][d_i][1][i-1]) ||
-#						(branches[b_i][d_i][1][i_next] != branches[b_i][d_i][1][i-1])):
-#							edge_loops[b_i+1].append(branches[b_i][d_i][0][i])
-#					elif (not branches[b_i][d_i-1][1][i] || 
-#						not branches[b_i][d_i+1][1][i] ||
-#						not branches[b_i][d_i][1][i_next] ||
-#						not branches[b_i][d_i][1][i-1]):
-#							edge_loops[b_i+1].append(branches[b_i][d_i][0][i])
-#					elif not (branches[b_i][d_i-1][1][i] &&
-#							branches[b_i][d_i+1][1][i] &&
-#							branches[b_i][d_i][1][i_next] &&
-#							branches[b_i][d_i][1][i-1]):
-#								edge_loops[b_i+1].append(branches[b_i][d_i][0][i])
 					elif (conn > 2):
 						edge_loops[b_i+1].append(branches[b_i][d_i][0][i])
-#					edge_loops[b_i+1].append(branches[b_i][d_i][0][i])
 	
 	# Order loops
 	var loops_ordered = []
@@ -191,13 +175,13 @@ func generate_mesh(data):
 	merge_loops(loops_ordered, arr, indices)
 	######## DEBUG #########
 	var debug_edge_loops = []
-#	#	point_cloud2.add_points(arr[Mesh.ARRAY_VERTEX][edge_loops[0]])
+	#	point_cloud2.add_points(arr[Mesh.ARRAY_VERTEX][edge_loops[0]])
 	debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[0]))
 	for l_i in range(loops_ordered.size()):
 		debug_edge_loops.append(DebugDraw.new_line_seg(Vector3.ZERO, color_arr[l_i]))
 		for p_i in range(loops_ordered[l_i].size()):
 			var pos = arr[Mesh.ARRAY_VERTEX][loops_ordered[l_i][p_i]]
-			labels.append(DebugDraw.new_label(str(p_i),pos,$Camera))
+#			labels.append(DebugDraw.new_label(str(p_i),pos,$Camera))
 #			point_cloud2.add_point(pos)
 			debug_edge_loops[-1].add_point(pos)
 		debug_edge_loops[-1].construct()
@@ -279,7 +263,7 @@ func merge_loops(loops, arr, indices):
 						if i == 0 && !merge_points[lc_i+from][pc_i].is_empty():
 							continue
 						var dist = arr[Mesh.ARRAY_VERTEX][loops[l_i][p_i]].distance_squared_to(arr[Mesh.ARRAY_VERTEX][loops[lc_i+from][pc_i]]) + arr[Mesh.ARRAY_VERTEX][loops[l_i][p_i-1]].distance_squared_to(arr[Mesh.ARRAY_VERTEX][loops[lc_i+from][pc_i]])
-						if dist < short && dist < 0.25:
+						if dist < short && dist < bake_interval*1.2: # IDK if this is optimal
 							short = dist
 							sp_i = [lc_i + from, pc_i]
 				if sp_i != null:
@@ -304,9 +288,12 @@ func merge_loops(loops, arr, indices):
 	
 	# Patch holes
 	var patch_indices:PackedInt32Array = []
-	for l_i in range(loops.size()):
+	# HACK dont need to loop through all, maybe...?
+	for l_i in range(loops.size()/2+1):
 		# Iterate points in loops
 		for p_i in range(loops[l_i].size()):
+			if merge_points[l_i][p_i].is_empty() || merge_points[l_i][p_i-1].is_empty():
+				continue
 			if merge_points[l_i][p_i][0][0] != merge_points[l_i][p_i-1][0][0]:
 				# Find increment direction of connected loop
 				var inc = 0
@@ -314,11 +301,13 @@ func merge_loops(loops, arr, indices):
 				while inc == 0:
 					inc = merge_points[l_i][p_i][0][1] - merge_points[l_i][i][0][1]
 					i += 1
+					# HACK overflow check, should change
 					if i > merge_points[l_i].size()-1:
 						i = 0
 				inc = inc/abs(inc)
 
 				# Make triangle
+				# HACK overflow check, should change
 				i = merge_points[l_i][p_i][0][1] + inc
 				if i > loops[merge_points[l_i][p_i][0][0]].size()-1:
 					i = 0

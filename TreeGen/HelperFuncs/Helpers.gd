@@ -40,13 +40,14 @@ func gen_disc(pos:Vector3, r:float, n:Vector3, res:int):
 	if (point == Vector3.ZERO): point = r*Vector3.FORWARD #will need info to align this correctly
 	else: point *=  r/point.length()
 	for i in range(4*res):
-		points.append(point.rotated(n, rot)+pos)
-		rot+=step
+		var p_rot = point.rotated(n, rot)
+		points.append(p_rot+pos)
 		var temp = []
-		for a in range(r*res*2):
-			temp.append(points[-1]*a/(r*res*2))
+		var divs = r*res*4
+		for d in range(divs):
+			temp.append(p_rot*d/(divs)+pos)
 		points.append_array(temp)
-			
+		rot+=step
 #	points.append(points[0]) #this is only necessary to complete the circle if points are used to generate lines
 	return points
 
@@ -88,3 +89,4 @@ func make_triangle(arr, points):
 		triangle.append(points[1])
 		triangle.append(points[0])
 	return triangle
+

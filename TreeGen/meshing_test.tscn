@@ -1,71 +1,113 @@
-[gd_scene load_steps=8 format=3 uid="uid://bx50orhkeawwo"]
+[gd_scene load_steps=10 format=3 uid="uid://bx50orhkeawwo"]
 
-[ext_resource type="Script" path="res://meshing_test.gd" id="1_l5t8y"]
+[ext_resource type="Script" path="res://march_cubes.gd" id="2_6etss"]
 [ext_resource type="Script" path="res://Camera3D.gd" id="2_15jvw"]
+
+[sub_resource type="Environment" id="Environment_m8j4c"]
+background_mode = 1
+ambient_light_source = 2
+
+[sub_resource type="SphereMesh" id="SphereMesh_ngewr"]
 
 [sub_resource type="Curve3D" id="Curve3D_eum13"]
 _data = {
-"points": PackedVector3Array(0, -0.5, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, -0.669736, 0.597713, -0.317717, 0.611479, 3.39534, -0.647222),
+"points": PackedVector3Array(0, -0.5, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, -0.669736, 0.597713, -0.317717, 0, 1, 0),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_7gku2"]
 _data = {
-"points": PackedVector3Array(0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, -0.401628, 2.48844, -1.95655),
+"points": PackedVector3Array(0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, -0.0485342, 1.92924, -1.14174),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_tsb62"]
 _data = {
-"points": PackedVector3Array(-0.0151861, -0.887542, 0.658426, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, -1.47983, 1.72298, -0.948815),
+"points": PackedVector3Array(0.912321, 0.00153923, -0.388618, -0.912321, -0.00153923, 0.388618, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, -0.863315, 2.25349, 0.409559),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_lnyg2"]
 _data = {
-"points": PackedVector3Array(0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, -0.636378, 2.12207, 1.49942),
+"points": PackedVector3Array(0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0.0641565, 1.94153, 0.610516),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
 
-[sub_resource type="Environment" id="Environment_m8j4c"]
-background_mode = 1
+[sub_resource type="Curve3D" id="Curve3D_qrcdk"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, 0, 1, 0, -0.462071, -0.303935, 2.15469, 0.462071, 0.303935, -2.15469, 1.22639, 1.60787, -0.188038),
+"tilts": PackedFloat32Array(0, 0)
+}
+point_count = 2
 
 [node name="Node3D" type="Node3D"]
-script = ExtResource("1_l5t8y")
-padding = 0.003
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_m8j4c")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+visible = false
+mesh = SubResource("SphereMesh_ngewr")
+
+[node name="Node3D" type="Node3D" parent="."]
+visible = false
+
+[node name="Path3D" type="Path3D" parent="Node3D"]
+curve = SubResource("Curve3D_eum13")
+
+[node name="Path3D2" type="Path3D" parent="Node3D"]
+curve = SubResource("Curve3D_7gku2")
+
+[node name="Path3D3" type="Path3D" parent="Node3D"]
+curve = SubResource("Curve3D_tsb62")
+
+[node name="Path3D4" type="Path3D" parent="Node3D"]
+curve = SubResource("Curve3D_lnyg2")
+
+[node name="Node3D2" type="Node3D" parent="."]
+script = ExtResource("2_6etss")
+
+[node name="Path3D" type="Path3D" parent="Node3D2"]
+curve = SubResource("Curve3D_eum13")
+
+[node name="Path3D2" type="Path3D" parent="Node3D2"]
+curve = SubResource("Curve3D_7gku2")
+
+[node name="Path3D3" type="Path3D" parent="Node3D2"]
+curve = SubResource("Curve3D_tsb62")
+
+[node name="Path3D4" type="Path3D" parent="Node3D2"]
+curve = SubResource("Curve3D_lnyg2")
+
+[node name="Path3D5" type="Path3D" parent="Node3D2"]
+curve = SubResource("Curve3D_qrcdk")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(4.37114e-08, -3.82137e-15, 1, -8.74228e-08, -1, 2.5411e-21, 1, -8.74228e-08, -4.37114e-08, 0, 0, 0)
+visible = false
+
+[node name="DirectionalLight3D2" type="DirectionalLight3D" parent="."]
+visible = false
+
+[node name="DirectionalLight3D3" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, 0, 0)
+visible = false
+
+[node name="DirectionalLight3D4" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 0, 0, 0)
+visible = false
 
 [node name="Camera" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.859, 1.89)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.859, 2.60959)
 size = 2.0
 script = ExtResource("2_15jvw")
 movespeed = 2.0
 
-[node name="Path3D" type="Path3D" parent="."]
-curve = SubResource("Curve3D_eum13")
-
-[node name="Path3D2" type="Path3D" parent="."]
-curve = SubResource("Curve3D_7gku2")
-
-[node name="Path3D3" type="Path3D" parent="."]
-curve = SubResource("Curve3D_tsb62")
-
-[node name="Path3D4" type="Path3D" parent="."]
-curve = SubResource("Curve3D_lnyg2")
-
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(4.37114e-08, -3.82137e-15, 1, -8.74228e-08, -1, 0, 1, -8.74228e-08, -4.37114e-08, 0, 0, 0)
-
-[node name="DirectionalLight3D2" type="DirectionalLight3D" parent="."]
-
-[node name="DirectionalLight3D3" type="DirectionalLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, 0, 0)
-
-[node name="DirectionalLight3D4" type="DirectionalLight3D" parent="."]
-transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 0, 0, 0)
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_m8j4c")
+[node name="SpotLight3D" type="SpotLight3D" parent="Camera"]
+spot_range = 42.57
+spot_attenuation = 0.164939
+spot_angle = 90.0

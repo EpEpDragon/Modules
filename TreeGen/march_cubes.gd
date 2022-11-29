@@ -2,7 +2,7 @@ extends Node3D
 
 # These should be about linearlyinverselyproportional
 # About: circ_res = 20 - bake_interval * 100
-@export var cell_size = 0.02
+@export var cell_size = 0.05
 @export var size = Vector3(4,5,4)
 
 var bake_interval = cell_size/2
@@ -60,7 +60,7 @@ func fill_grid(grid, curves:Array[Curve3D]):
 			norm_prev = norm
 			var c_points = Helpers.gen_disc(p, radius, norm, circ_res)
 			for c_p in c_points:
-				c_p += Vector3(size.x,0,size.z)/2.0
+				c_p += Vector3(size.x,0,size.z)/2
 				grid[int(c_p.x/cell_size)][int(c_p.y/cell_size)][int(c_p.z/cell_size)] = true
 	# TIMING
 	print("Fill grid: " + str(tim_prev-tim_start))
@@ -118,7 +118,7 @@ func marching_cubes(grid):
 				for e in range(tri_table[map].size()-1,-1,-1):
 					var indA = edge_table[tri_table[map][e]][0]
 					var indB = edge_table[tri_table[map][e]][1]
-					arr[Mesh.ARRAY_VERTEX].append(((Vector3(x,y,z) + indA + Vector3(x,y,z) + indB))*cell_size/2)
+					arr[Mesh.ARRAY_VERTEX].append(((Vector3(x,y,z) + indA + Vector3(x,y,z) + indB)- Vector3(size_x,0,size_z))*cell_size/2 )
 					arr[Mesh.ARRAY_INDEX].append(index)
 					index += 1
 					if index % 3 == 0:

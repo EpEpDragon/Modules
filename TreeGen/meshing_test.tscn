@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://bx50orhkeawwo"]
+[gd_scene load_steps=12 format=3 uid="uid://bx50orhkeawwo"]
 
 [ext_resource type="Script" path="res://march_cubes.gd" id="2_6etss"]
 [ext_resource type="Script" path="res://Camera3D.gd" id="2_15jvw"]
@@ -7,11 +7,11 @@
 background_mode = 1
 ambient_light_source = 2
 
-[sub_resource type="SphereMesh" id="SphereMesh_ngewr"]
+[sub_resource type="BoxMesh" id="BoxMesh_je6ei"]
 
 [sub_resource type="Curve3D" id="Curve3D_eum13"]
 _data = {
-"points": PackedVector3Array(0, -0.5, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, -0.669736, 0.597713, -0.317717, 0, 1, 0),
+"points": PackedVector3Array(-0.0576086, -0.492647, -0.0704763, 0.0576086, 0.492647, 0.0704763, 0, 0, 0, 0, 0, 0, -0.669736, 0.597713, -0.317717, 0, 1, 0),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -32,7 +32,7 @@ point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_lnyg2"]
 _data = {
-"points": PackedVector3Array(0, -1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0.0641565, 1.94153, 0.610516),
+"points": PackedVector3Array(0, -0.985015, 0.154412, 0, 0.985015, -0.154412, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2.5, 0),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
@@ -44,6 +44,20 @@ _data = {
 }
 point_count = 2
 
+[sub_resource type="Curve3D" id="Curve3D_737ux"]
+_data = {
+"points": PackedVector3Array(-0.421398, -0.89859, 0.026143, 0.421398, 0.89859, -0.026143, 0, 2.5, 0, 0, 0, 0, 0, 0, 0, 0.436769, 3.36869, -0.85665),
+"tilts": PackedFloat32Array(0, 0)
+}
+point_count = 2
+
+[sub_resource type="Curve3D" id="Curve3D_pj3bd"]
+_data = {
+"points": PackedVector3Array(0.522977, -0.82425, -0.111696, -0.522977, 0.82425, 0.111696, 0, 2.5, 0, 0.749927, 0.349034, 1.31387, -0.749927, -0.349034, -1.31387, -1.24898, 3.09058, 0.0415649, 0, 0, 0, 0, 0, 0, -0.691617, 3.91044, -0.139213),
+"tilts": PackedFloat32Array(0, 0, 0)
+}
+point_count = 3
+
 [node name="Node3D" type="Node3D"]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
@@ -51,7 +65,7 @@ environment = SubResource("Environment_m8j4c")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 visible = false
-mesh = SubResource("SphereMesh_ngewr")
+mesh = SubResource("BoxMesh_je6ei")
 
 [node name="Node3D" type="Node3D" parent="."]
 visible = false
@@ -85,6 +99,12 @@ curve = SubResource("Curve3D_lnyg2")
 
 [node name="Path3D5" type="Path3D" parent="Node3D2"]
 curve = SubResource("Curve3D_qrcdk")
+
+[node name="Path3D6" type="Path3D" parent="Node3D2"]
+curve = SubResource("Curve3D_737ux")
+
+[node name="Path3D7" type="Path3D" parent="Node3D2"]
+curve = SubResource("Curve3D_pj3bd")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(4.37114e-08, -3.82137e-15, 1, -8.74228e-08, -1, 2.5411e-21, 1, -8.74228e-08, -4.37114e-08, 0, 0, 0)

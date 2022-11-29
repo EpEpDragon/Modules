@@ -2,11 +2,11 @@ extends Node3D
 
 # These should be about linearlyinverselyproportional
 # About: circ_res = 20 - bake_interval * 100
-@export var cell_size = 0.05
-@export var size = Vector3(3,3,3)
+@export var cell_size = 0.02
+@export var size = Vector3(4,5,4)
 
 var bake_interval = cell_size/2
-var circ_res = int(0.2/bake_interval)
+var circ_res = int(0.3/bake_interval)
 var radius = 0.2
 
 var point_cloud = DebugDraw.new_point_cloud(Vector3.ZERO, 20, Color.GREEN)
@@ -23,9 +23,9 @@ func _ready():
 	print("Bake interval: " + str(bake_interval))
 	print("Circ res: " + str(circ_res))
 	print("\nTIMING")
-	var curves:Array[Curve3D] = [$Path3D.get_curve(),$Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve(), $Path3D5.get_curve()]
-	# Get vertecices ordered by branch and disc
+	var curves:Array[Curve3D] = [$Path3D.get_curve(),$Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve(), $Path3D5.get_curve(),$Path3D6.get_curve(),$Path3D7.get_curve()]
 	var grid = generate_grid(size, cell_size)
+	
 	fill_grid(grid,curves)
 	marching_cubes(grid)
 #	point_cloud.construct()
@@ -97,6 +97,7 @@ func marching_cubes(grid):
 	var arr = []
 	arr.resize(Mesh.ARRAY_MAX)
 	arr[Mesh.ARRAY_VERTEX] = PackedVector3Array()
+	arr[Mesh.ARRAY_NORMAL] = PackedVector3Array()
 	arr[Mesh.ARRAY_INDEX] = PackedInt32Array()
 	
 	var map = 0
@@ -114,13 +115,18 @@ func marching_cubes(grid):
 				if grid[x+1][y+1][z]: map += 32
 				if grid[x+1][y+1][z+1]: map += 64
 				if grid[x][y+1][z+1]: map += 128
-				
-				for e in tri_table[map]:
-					var indA = edge_table[e][0]
-					var indB = edge_table[e][1]
-					arr[Mesh.ARRAY_VERTEX].append(((Vector3(x,y,z) + indA/cell_size + Vector3(x,y,z) + indB/cell_size))*cell_size/2)
+				for e in range(tri_table[map].size()-1,-1,-1):
+					var indA = edge_table[tri_table[map][e]][0]
+					var indB = edge_table[tri_table[map][e]][1]
+					arr[Mesh.ARRAY_VERTEX].append(((Vector3(x,y,z) + indA + Vector3(x,y,z) + indB))*cell_size/2)
 					arr[Mesh.ARRAY_INDEX].append(index)
 					index += 1
+					if index % 3 == 0:
+						var face_normal = (arr[Mesh.ARRAY_VERTEX][-1]-arr[Mesh.ARRAY_VERTEX][-3]).cross(arr[Mesh.ARRAY_VERTEX][-2]-arr[Mesh.ARRAY_VERTEX][-3]).normalized()
+						arr[Mesh.ARRAY_NORMAL].append(face_normal)
+						arr[Mesh.ARRAY_NORMAL].append(face_normal)
+						arr[Mesh.ARRAY_NORMAL].append(face_normal)
+				
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arr)
 	mesh_inst.set_mesh(mesh)
 	add_child(mesh_inst)

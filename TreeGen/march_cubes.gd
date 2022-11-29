@@ -9,12 +9,12 @@ var bake_interval = cell_size/2
 var circ_res = int(0.3/bake_interval)
 var radius = 0.2
 
-var point_cloud = DebugDraw.new_point_cloud(Vector3.ZERO, 20, Color.GREEN)
-var point_cloud2 = DebugDraw.new_point_cloud(Vector3.ZERO, 10, Color.BLUE)
-var point_cloud3 = DebugDraw.new_point_cloud(Vector3.ZERO, 20, Color.RED)
-var labels = []
-var color_arr = [Color.RED, Color.GREEN, Color.BLUE, Color.PURPLE, Color.YELLOW, Color.CYAN, Color.BLUE, Color.PURPLE, Color.PINK, Color.RED]
-var line_segment = DebugDraw.new_line_seg(Vector3(0,0,-5),Color.RED)
+#var point_cloud = DebugDraw.new_point_cloud(Vector3.ZERO, 20, Color.GREEN)
+#var point_cloud2 = DebugDraw.new_point_cloud(Vector3.ZERO, 10, Color.BLUE)
+#var point_cloud3 = DebugDraw.new_point_cloud(Vector3.ZERO, 20, Color.RED)
+#var labels = []
+#var color_arr = [Color.RED, Color.GREEN, Color.BLUE, Color.PURPLE, Color.YELLOW, Color.CYAN, Color.BLUE, Color.PURPLE, Color.PINK, Color.RED]
+#var line_segment = DebugDraw.new_line_seg(Vector3(0,0,-5),Color.RED)
 
 var tim_start = Time.get_unix_time_from_system()
 var tim_prev = tim_start
@@ -30,7 +30,7 @@ func _ready():
 	marching_cubes(grid)
 #	point_cloud.construct()
 
-
+# Create blank grid
 func generate_grid(size:Vector3, cell_size:float):
 	var grid = []
 	for x in range(size.x/cell_size):
@@ -75,16 +75,6 @@ func fill_grid(grid, curves:Array[Curve3D]):
 #					mesh_inst.translate(Vector3(x,y,z)*cell_size - Vector3(size.x,0,size.z)/2.0)
 #					add_child(mesh_inst)
 #					point_cloud.add_point(Vector3(x,y,z)*cell_size - Vector3(size.x,0,size.z)/2.0)
-#			for x in range(grid.size()):
-#				for y in range(grid[x].size()):
-#					for z in range(grid[x][y].size()):
-#						var point_coord = Vector3(x,y,z)*cell_size - Vector3(size.x,0,size.z)/2.0
-#						if Helpers.in_cylinder(points[p_i]+Vector3.ONE,points[p_i+1]+Vector3.ONE,0.5,point_coord+Vector3.ONE):
-#							grid[x][y][z] = true
-#							point_cloud.add_point(point_coord)
-#	# TIMING
-#	print("display: " + str(tim_prev-tim_start))
-#	tim_prev = Time.get_unix_time_from_system()
 
 
 func marching_cubes(grid):
@@ -105,6 +95,7 @@ func marching_cubes(grid):
 	for x in range(size_x-1):
 		for y in range(size_y-1):
 			for z in range(size_z-1):
+				# Build binary neigbour map 
 				map = 0
 				if grid[x][y][z]: map += 1
 				if grid[x+1][y][z]: map += 2
@@ -115,18 +106,21 @@ func marching_cubes(grid):
 				if grid[x+1][y+1][z]: map += 32
 				if grid[x+1][y+1][z+1]: map += 64
 				if grid[x][y+1][z+1]: map += 128
+				# HACK Should actually change tir_table order instead of reverse iteration... but lazy
 				for e in range(tri_table[map].size()-1,-1,-1):
+					# Find vertices to make triangles
 					var indA = edge_table[tri_table[map][e]][0]
 					var indB = edge_table[tri_table[map][e]][1]
 					arr[Mesh.ARRAY_VERTEX].append(((Vector3(x,y,z) + indA + Vector3(x,y,z) + indB)- Vector3(size_x,0,size_z))*cell_size/2 )
 					arr[Mesh.ARRAY_INDEX].append(index)
 					index += 1
+					# Calc surface normal when triangle finished
+					# TODO change to vertex normals for smoother finish
 					if index % 3 == 0:
 						var face_normal = (arr[Mesh.ARRAY_VERTEX][-1]-arr[Mesh.ARRAY_VERTEX][-3]).cross(arr[Mesh.ARRAY_VERTEX][-2]-arr[Mesh.ARRAY_VERTEX][-3]).normalized()
 						arr[Mesh.ARRAY_NORMAL].append(face_normal)
 						arr[Mesh.ARRAY_NORMAL].append(face_normal)
 						arr[Mesh.ARRAY_NORMAL].append(face_normal)
-				
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arr)
 	mesh_inst.set_mesh(mesh)
 	add_child(mesh_inst)

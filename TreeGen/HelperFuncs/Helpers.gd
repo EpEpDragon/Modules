@@ -45,7 +45,7 @@ func gen_disc(pos:Vector3, r:float, n:Vector3, res:int):
 		var divs = r*res*4
 		for d in range(divs-1):
 			temp[0].append(p_rot*d/(divs)+pos)
-			temp[1].append(n)
+			temp[1].append(p_rot.normalized())
 		points[0].append_array(temp[0])
 		points[1].append_array(temp[1])
 		

@@ -2,7 +2,7 @@ extends Node3D
 
 # These should be about linearlyinverselyproportional
 # About: circ_res = 20 - bake_interval * 100
-@export var cell_size = 0.03
+@export var cell_size = 0.04
 @export var size = Vector3(4,5,4)
 
 var bake_interval = cell_size/2

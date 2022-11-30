@@ -2,7 +2,7 @@ extends Node3D
 
 # These should be about linearlyinverselyproportional
 # About: circ_res = 20 - bake_interval * 100
-@export var cell_size = 0.05
+@export var cell_size = 0.03
 @export var size = Vector3(4,5,4)
 
 var bake_interval = cell_size/2
@@ -38,7 +38,7 @@ func generate_grid(size:Vector3, cell_size:float):
 		for y in range(size.y/cell_size):
 			grid[x].append([])
 			for z in range(size.z/cell_size):
-				grid[x][y].append(false)
+				grid[x][y].append([false, Vector3.ZERO])
 	# TIMING
 	print("Generate grid: " + str(tim_prev-tim_start))
 	tim_prev = Time.get_unix_time_from_system()
@@ -54,14 +54,19 @@ func fill_grid(grid, curves:Array[Curve3D]):
 		var points = c.get_baked_points()
 		for p in points:
 			norm = (p-prev_p).normalized()
+			# Required for curve connection cases
+			# Offset to center of grid
 			if !norm.is_normalized():
 				norm = norm_prev
 			prev_p = p
 			norm_prev = norm
-			var c_points = Helpers.gen_disc(p, radius, norm, circ_res)
-			for c_p in c_points:
-				c_p += Vector3(size.x,0,size.z)/2
-				grid[int(c_p.x/cell_size)][int(c_p.y/cell_size)][int(c_p.z/cell_size)] = true
+			# Calc points on disc, brute force
+			p += Vector3(size.x,0,size.z)/2
+			var c_data = Helpers.gen_disc(p, radius, norm, circ_res)
+			for c_d in range(c_data[0].size()):
+				# Snap to grid, fill
+				grid[int(c_data[0][c_d].x/cell_size)][int(c_data[0][c_d].y/cell_size)][int(c_data[0][c_d].z/cell_size)][0] = true
+				grid[int(c_data[0][c_d].x/cell_size)][int(c_data[0][c_d].y/cell_size)][int(c_data[0][c_d].z/cell_size)][1] = ((grid[int(c_data[0][c_d].x/cell_size)][int(c_data[0][c_d].y/cell_size)][int(c_data[0][c_d].z/cell_size)][1] + c_data[1][c_d])/2).normalized()
 	# TIMING
 	print("Fill grid: " + str(tim_prev-tim_start))
 	tim_prev = Time.get_unix_time_from_system()
@@ -97,30 +102,31 @@ func marching_cubes(grid):
 			for z in range(size_z-1):
 				# Build binary neigbour map 
 				map = 0
-				if grid[x][y][z]: map += 1
-				if grid[x+1][y][z]: map += 2
-				if grid[x+1][y][z+1]: map += 4
-				if grid[x][y][z+1]: map += 8
+				if grid[x][y][z][0]: map += 1
+				if grid[x+1][y][z][0]: map += 2
+				if grid[x+1][y][z+1][0]: map += 4
+				if grid[x][y][z+1][0]: map += 8
 				
-				if grid[x][y+1][z]: map += 16
-				if grid[x+1][y+1][z]: map += 32
-				if grid[x+1][y+1][z+1]: map += 64
-				if grid[x][y+1][z+1]: map += 128
+				if grid[x][y+1][z][0]: map += 16
+				if grid[x+1][y+1][z][0]: map += 32
+				if grid[x+1][y+1][z+1][0]: map += 64
+				if grid[x][y+1][z+1][0]: map += 128
 				# HACK Should actually change tir_table order instead of reverse iteration... but lazy
 				for e in range(tri_table[map].size()-1,-1,-1):
 					# Find vertices to make triangles
 					var indA = edge_table[tri_table[map][e]][0]
 					var indB = edge_table[tri_table[map][e]][1]
 					arr[Mesh.ARRAY_VERTEX].append(((Vector3(x,y,z) + indA + Vector3(x,y,z) + indB)- Vector3(size_x,0,size_z))*cell_size/2 )
+					arr[Mesh.ARRAY_NORMAL].append(((grid[x+indA.x][y+indA.y][z+indA.z][1] + grid[x+indB.x][y+indB.y][z+indB.z][1])/2).normalized())
 					arr[Mesh.ARRAY_INDEX].append(index)
 					index += 1
 					# Calc surface normal when triangle finished
 					# TODO change to vertex normals for smoother finish
-					if index % 3 == 0:
-						var face_normal = (arr[Mesh.ARRAY_VERTEX][-1]-arr[Mesh.ARRAY_VERTEX][-3]).cross(arr[Mesh.ARRAY_VERTEX][-2]-arr[Mesh.ARRAY_VERTEX][-3]).normalized()
-						arr[Mesh.ARRAY_NORMAL].append(face_normal)
-						arr[Mesh.ARRAY_NORMAL].append(face_normal)
-						arr[Mesh.ARRAY_NORMAL].append(face_normal)
+#					if index % 3 == 0:
+#						var face_normal = (arr[Mesh.ARRAY_VERTEX][-1]-arr[Mesh.ARRAY_VERTEX][-3]).cross(arr[Mesh.ARRAY_VERTEX][-2]-arr[Mesh.ARRAY_VERTEX][-3]).normalized()
+#						arr[Mesh.ARRAY_NORMAL].append(face_normal)
+#						arr[Mesh.ARRAY_NORMAL].append(face_normal)
+#						arr[Mesh.ARRAY_NORMAL].append(face_normal)
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arr)
 	mesh_inst.set_mesh(mesh)
 	add_child(mesh_inst)
@@ -142,7 +148,7 @@ var edge_table = (
 	[Vector3(1,0,0), Vector3(1,1,0)],  # 9
 	[Vector3(1,0,1), Vector3(1,1,1)],  # 10
 	[Vector3(0,0,1), Vector3(0,1,1)]]  # 11
-)
+	)
 var tri_table = (
 	[[],
 	[0, 8, 3],

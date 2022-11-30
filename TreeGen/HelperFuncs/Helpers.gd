@@ -35,18 +35,23 @@ func gen_circle(pos:Vector3, r:float, n:Vector3, res:int):
 func gen_disc(pos:Vector3, r:float, n:Vector3, res:int):
 	var rot = 0
 	var step = PI/2/res
-	var points = []
+	var points = [[],[]]
 	var point = (Vector3.UP).cross(n).cross(n)
 	if (point == Vector3.ZERO): point = r*Vector3.FORWARD #will need info to align this correctly
 	else: point *=  r/point.length()
 	for i in range(4*res):
 		var p_rot = point.rotated(n, rot)
-		points.append(p_rot+pos)
-		var temp = []
+		var temp = [[],[]]
 		var divs = r*res*4
-		for d in range(divs):
-			temp.append(p_rot*d/(divs)+pos)
-		points.append_array(temp)
+		for d in range(divs-1):
+			temp[0].append(p_rot*d/(divs)+pos)
+			temp[1].append(n)
+		points[0].append_array(temp[0])
+		points[1].append_array(temp[1])
+		
+		points[0].append(p_rot+pos)
+		points[1].append(p_rot.normalized())
+		
 		rot+=step
 #	points.append(points[0]) #this is only necessary to complete the circle if points are used to generate lines
 	return points

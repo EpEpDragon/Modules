@@ -22,9 +22,10 @@ func _input(event):
 			get_viewport().debug_draw = Viewport.DEBUG_DRAW_WIREFRAME
 		elif get_viewport().debug_draw == Viewport.DEBUG_DRAW_WIREFRAME:
 			get_viewport().debug_draw = Viewport.DEBUG_DRAW_OVERDRAW
+		elif get_viewport().debug_draw == Viewport.DEBUG_DRAW_OVERDRAW:
+			get_viewport().debug_draw = Viewport.DEBUG_DRAW_NORMAL_BUFFER
 		else:
 			get_viewport().debug_draw = Viewport.DEBUG_DRAW_DISABLED
-
 
 func handle_movement_translate(delta):
 	velocity = Vector3()

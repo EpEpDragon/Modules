@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://bx50orhkeawwo"]
+[gd_scene load_steps=13 format=3 uid="uid://bx50orhkeawwo"]
 
 [ext_resource type="Script" path="res://march_cubes.gd" id="2_6etss"]
 [ext_resource type="Script" path="res://Camera3D.gd" id="2_15jvw"]
@@ -8,6 +8,8 @@ background_mode = 1
 ambient_light_source = 2
 
 [sub_resource type="BoxMesh" id="BoxMesh_je6ei"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_ihuli"]
 
 [sub_resource type="Curve3D" id="Curve3D_eum13"]
 _data = {
@@ -66,6 +68,10 @@ environment = SubResource("Environment_m8j4c")
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 mesh = SubResource("BoxMesh_je6ei")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.56711, -0.5, -0.0210794)
+mesh = SubResource("SphereMesh_ihuli")
 
 [node name="Node3D" type="Node3D" parent="."]
 visible = false

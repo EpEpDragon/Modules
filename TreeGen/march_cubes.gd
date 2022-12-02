@@ -2,45 +2,48 @@ extends Node3D
 
 # These should be about linearlyinverselyproportional
 # About: circ_res = 20 - bake_interval * 100
-@export var cell_size = 0.04
-@export var size = Vector3(4,5,4)
 
-var bake_interval = cell_size/2
+@export var size = Vector3(5,5,5)
+var cell_size = 0.05
+var cloud_size = size/cell_size
+var point_cloud = DebugDraw.new_point_cloud(Vector3.ZERO, 20, Color.GREEN)
+var chunk_size = 1
+
+var bake_interval = cell_size/3
 var circ_res = int(0.3/bake_interval)
 var radius = 0.2
 
-#var point_cloud = DebugDraw.new_point_cloud(Vector3.ZERO, 20, Color.GREEN)
-#var point_cloud2 = DebugDraw.new_point_cloud(Vector3.ZERO, 10, Color.BLUE)
-#var point_cloud3 = DebugDraw.new_point_cloud(Vector3.ZERO, 20, Color.RED)
-#var labels = []
-#var color_arr = [Color.RED, Color.GREEN, Color.BLUE, Color.PURPLE, Color.YELLOW, Color.CYAN, Color.BLUE, Color.PURPLE, Color.PINK, Color.RED]
-#var line_segment = DebugDraw.new_line_seg(Vector3(0,0,-5),Color.RED)
-
 var tim_start = Time.get_unix_time_from_system()
 var tim_prev = tim_start
+
 
 func _ready():
 	print("Bake interval: " + str(bake_interval))
 	print("Circ res: " + str(circ_res))
 	print("\nTIMING")
-	var curves:Array[Curve3D] = [$Path3D.get_curve(),$Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve(), $Path3D5.get_curve(),$Path3D6.get_curve(),$Path3D7.get_curve()]
-	var grid = generate_grid(size, cell_size)
+	var curves:Array[Curve3D] = [$Path3D.get_curve(),$Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve(), $Path3D5.get_curve(),$Path3D6.get_curve()]
 	
-	fill_grid(grid,curves)
-	marching_cubes(grid)
+#	var grid = generate_grid(size, cell_size)
+#	fill_grid(grid,curves)
+#	marching_cubes(grid)
+
+	var grid = generate_grid_compute(cloud_size, cell_size)
+#	grid[cloud_size.y*cloud_size.x*1 + cloud_size.x*1 + 1] = 1.0
+	fill_grid_compute(grid, curves)
+	marching_cubes_compute(grid)
 #	point_cloud.construct()
 
 # Create blank grid
 func generate_grid(size:Vector3, cell_size:float):
 	var grid = []
-	for x in range(size.x/cell_size):
+	for x in range(size.x):
 		grid.append([])
-		for y in range(size.y/cell_size):
+		for y in range(size.y):
 			grid[x].append([])
-			for z in range(size.z/cell_size):
+			for z in range(size.z):
 				grid[x][y].append([false, Vector3.ZERO])
 	# TIMING
-	print("Generate grid: " + str(tim_prev-tim_start))
+	print("Generate grid: " + str((tim_prev-tim_start)*1000))
 	tim_prev = Time.get_unix_time_from_system()
 	return grid
 
@@ -68,8 +71,8 @@ func fill_grid(grid, curves:Array[Curve3D]):
 				grid[int(c_data[0][c_d].x/cell_size)][int(c_data[0][c_d].y/cell_size)][int(c_data[0][c_d].z/cell_size)][0] = true
 				grid[int(c_data[0][c_d].x/cell_size)][int(c_data[0][c_d].y/cell_size)][int(c_data[0][c_d].z/cell_size)][1] = ((grid[int(c_data[0][c_d].x/cell_size)][int(c_data[0][c_d].y/cell_size)][int(c_data[0][c_d].z/cell_size)][1] + c_data[1][c_d])/2).normalized()
 	# TIMING
-	print("Fill grid: " + str(tim_prev-tim_start))
-	tim_prev = Time.get_unix_time_from_system()
+#	print("Fill grid: " + str((tim_prev-tim_start)*1000))
+#	tim_prev = Time.get_unix_time_from_system()
 #	for x in range(grid.size()):
 #		for y in range(grid[x].size()):
 #			for z in range(grid[x][y].size()):
@@ -132,8 +135,153 @@ func marching_cubes(grid):
 	add_child(mesh_inst)
 	
 	# TIMING
-	print("Marching cubes: " + str(tim_prev-tim_start))
+	print("Marching cubes: " + str((tim_prev-tim_start)*1000))
 	tim_prev = Time.get_unix_time_from_system()
+
+
+########### COMPUTE #############
+
+# Create blank grid
+func generate_grid_compute(size:Vector3, cell_size:float):
+	var grid = PackedInt32Array()
+	for x in range(size.x):
+		for y in range(size.y):
+			for z in range(size.z):
+				grid.append(0)
+	# TIMING
+	print("Generate grid: " + str((Time.get_unix_time_from_system() - tim_prev)))
+	tim_prev = Time.get_unix_time_from_system()
+	return grid
+
+
+func fill_grid_compute(grid, curves:Array[Curve3D]):
+	var prev_p = Vector3(0,1,0)
+	var norm
+	var norm_prev
+	for c in curves:
+		c.set_bake_interval(bake_interval)
+		var points = c.get_baked_points()
+		for p in points:
+			norm = (p-prev_p).normalized()
+			# Required for curve connection cases
+			if !norm.is_normalized():
+				norm = norm_prev
+			prev_p = p
+			norm_prev = norm
+			# Offset to center of grid
+			p += Vector3(size.x,0,size.z)/2
+			# Calc points on disc, brute force
+			var c_data = Helpers.gen_disc(p, radius, norm, circ_res)
+			for c_d in range(c_data[0].size()):
+				# Snap to grid, fill
+				var x = int(c_data[0][c_d].x/cell_size)
+				var y = int(c_data[0][c_d].y/cell_size)
+				var z = int(c_data[0][c_d].z/cell_size)
+				grid[cloud_size.x*cloud_size.y*z + cloud_size.x*y + x] = 1
+#				grid[int(c_data[0][c_d].x/cell_size)][int(c_data[0][c_d].y/cell_size)][int(c_data[0][c_d].z/cell_size)][1] = ((grid[int(c_data[0][c_d].x/cell_size)][int(c_data[0][c_d].y/cell_size)][int(c_data[0][c_d].z/cell_size)][1] + c_data[1][c_d])/2).normalized()
+	# TIMING
+	print("Fill grid: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
+	tim_prev = Time.get_unix_time_from_system()
+
+#	for x in range(cloud_size.x):
+#		for y in range(cloud_size.z):
+#			for z in range(cloud_size.y):
+#				if grid[cloud_size.x*cloud_size.y*z + cloud_size.x*y + x] == 1:
+#					point_cloud.add_point(Vector3(x,y,z)*cell_size - Vector3(size.x,0,size.z)/2.0)
+
+func marching_cubes_compute(grid:PackedInt32Array):
+	var rd := RenderingServer.create_local_rendering_device()
+	var shader_file := load("res://compute.glsl")
+	var shader_spirv: RDShaderSPIRV = shader_file.get_spirv()
+	var shader := rd.shader_create_from_spirv(shader_spirv)
+	
+	###### Bindings #######
+	# Cloud buffer
+	var input_bytes := grid.to_byte_array()
+	var input_buffer := rd.storage_buffer_create(input_bytes.size(), input_bytes)
+	var input_uniform := RDUniform.new()
+	input_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+	input_uniform.binding = 0
+	input_uniform.add_id(input_buffer)
+	
+	# Vertex buffer
+	var vertices := PackedVector3Array()
+	vertices.resize(cloud_size.x*cloud_size.y*cloud_size.z*15)
+#	vertices.fill(Vector3(0,0,0))
+	var vertices_bytes := vertices.to_byte_array()
+	var vertex_buffer := rd.storage_buffer_create(vertices_bytes.size(), vertices_bytes)
+	var vertex_uniform := RDUniform.new()
+	vertex_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+	vertex_uniform.binding = 1
+	vertex_uniform.add_id(vertex_buffer)
+	
+	# Normal buffer
+	var normals := PackedVector3Array()
+	normals.resize(cloud_size.x*cloud_size.y*cloud_size.z*15)
+	var normals_bytes := vertices.to_byte_array()
+	var normal_buffer := rd.storage_buffer_create(normals_bytes.size(), normals_bytes)
+	var normal_uniform := RDUniform.new()
+	normal_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER
+	normal_uniform.binding = 2
+	normal_uniform.add_id(normal_buffer)
+	
+	var uniform_set := rd.uniform_set_create([vertex_uniform, normal_uniform, input_uniform], shader, 0) # the last parameter (the 0) needs to match the "set" in our shader file
+	#############
+	
+	# Create a compute pipeline
+	var pipeline := rd.compute_pipeline_create(shader)
+	var compute_list := rd.compute_list_begin()
+	rd.compute_list_bind_compute_pipeline(compute_list, pipeline)
+	rd.compute_list_bind_uniform_set(compute_list, uniform_set, 0)
+#	rd.compute_list_dispatch(compute_list, ceil(cloud_size.x/(8*cell_size)), ceil(cloud_size.y/(8*cell_size)), ceil(cloud_size.z/(8*cell_size)))
+	rd.compute_list_dispatch(compute_list, cloud_size.x/chunk_size, cloud_size.y/chunk_size, cloud_size.z/chunk_size)
+	rd.compute_list_end()
+	
+	rd.submit()
+	rd.sync()
+	
+	# TIMING
+	print("Marching cubes: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
+	tim_prev = Time.get_unix_time_from_system()
+	
+	# Read back the data from the buffer
+	vertices_bytes = rd.buffer_get_data(vertex_buffer)
+	normals_bytes = rd.buffer_get_data(normal_buffer)
+	
+	# TIMING
+	print("Pull data: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
+	tim_prev = Time.get_unix_time_from_system()
+	
+	var out_vertices := vertices_bytes.to_float32_array()
+	var out_normals = normals_bytes.to_float32_array()
+	var temp := PackedVector3Array()
+	temp.resize(vertices.size())
+	var temp2 := PackedVector3Array()
+	temp2.resize(vertices.size())
+	var t_i = 0
+	for i in range(0,out_vertices.size(),4):
+		if Vector3(out_vertices[i],out_vertices[i+1],out_vertices[i+2]) != Vector3(0,0,0):
+			temp[t_i] = Vector3(out_vertices[i],out_vertices[i+1],out_vertices[i+2])
+			temp2[t_i] = Vector3(out_normals[i],out_normals[i+1],out_normals[i+2])
+			t_i += 1
+	
+	# TIMING
+	print("Translate data: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
+	
+	tim_prev = Time.get_unix_time_from_system()
+	var mesh_inst = MeshInstance3D.new()
+	var mesh = ArrayMesh.new()
+	var arr = []
+	arr.resize(Mesh.ARRAY_MAX)
+	arr[Mesh.ARRAY_VERTEX] = temp
+	arr[Mesh.ARRAY_NORMAL] = temp2
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arr)
+	mesh_inst.set_mesh(mesh)
+	add_child(mesh_inst)
+	# TIMING
+	print("Draw: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
+	tim_prev = Time.get_unix_time_from_system()
+	
 
 var edge_table = (
 	[[Vector3(0,0,0), Vector3(1,0,0)], # 0

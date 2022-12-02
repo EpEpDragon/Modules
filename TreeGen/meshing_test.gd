@@ -17,7 +17,7 @@ var line_segment = DebugDraw.new_line_seg(Vector3(0,0,-5),Color.RED)
 
 var tim1 = Time.get_unix_time_from_system()
 func _ready():
-	var curves = [$Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve()]
+	var curves = [$Path3D.get_curve(), $Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve()]
 	# Get vertecices ordered by branch and disc
 	var data = generate_vertices(curves,0.5)
 	generate_mesh(data)

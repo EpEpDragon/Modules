@@ -32,7 +32,6 @@ layout(set = 0, binding = 2, std430) writeonly buffer NormalBuffer {
     vec3 normals[];
 };
 
-
 void main() {
     uvec3 i_glob = gl_GlobalInvocationID;
     // Make sure this is not a border cell (otherwise neighbor lookup in the next step would fail):
@@ -83,7 +82,7 @@ void main() {
                 normals[vertex_i-1] = face_normal;
                 normals[vertex_i-2] = face_normal;
             }
-        } 
+        }
         vertex_i += 1;
     }
 }

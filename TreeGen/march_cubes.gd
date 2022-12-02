@@ -9,8 +9,8 @@ var cloud_size = size/cell_size
 var point_cloud = DebugDraw.new_point_cloud(Vector3.ZERO, 20, Color.GREEN)
 var chunk_size = 1
 
-var bake_interval = cell_size/3
-var circ_res = int(0.3/bake_interval)
+var bake_interval = cell_size/4
+var circ_res = int(0.4/bake_interval)
 var radius = 0.2
 
 var tim_start = Time.get_unix_time_from_system()
@@ -23,18 +23,17 @@ func _ready():
 	print("\nTIMING")
 	var curves:Array[Curve3D] = [$Path3D.get_curve(),$Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve(), $Path3D5.get_curve(),$Path3D6.get_curve()]
 	
-#	var grid = generate_grid(size, cell_size)
+#	var grid = generate_grid(cloud_size)
 #	fill_grid(grid,curves)
 #	marching_cubes(grid)
 
-	var grid = generate_grid_compute(cloud_size, cell_size)
-#	grid[cloud_size.y*cloud_size.x*1 + cloud_size.x*1 + 1] = 1.0
+	var grid = generate_grid_compute(cloud_size)
 	fill_grid_compute(grid, curves)
 	marching_cubes_compute(grid)
 #	point_cloud.construct()
 
 # Create blank grid
-func generate_grid(size:Vector3, cell_size:float):
+func generate_grid(size:Vector3):
 	var grid = []
 	for x in range(size.x):
 		grid.append([])
@@ -43,7 +42,7 @@ func generate_grid(size:Vector3, cell_size:float):
 			for z in range(size.z):
 				grid[x][y].append([false, Vector3.ZERO])
 	# TIMING
-	print("Generate grid: " + str((tim_prev-tim_start)*1000))
+	print("Generate grid: " + str(( Time.get_unix_time_from_system()-tim_prev)*1000))
 	tim_prev = Time.get_unix_time_from_system()
 	return grid
 
@@ -71,8 +70,8 @@ func fill_grid(grid, curves:Array[Curve3D]):
 				grid[int(c_data[0][c_d].x/cell_size)][int(c_data[0][c_d].y/cell_size)][int(c_data[0][c_d].z/cell_size)][0] = true
 				grid[int(c_data[0][c_d].x/cell_size)][int(c_data[0][c_d].y/cell_size)][int(c_data[0][c_d].z/cell_size)][1] = ((grid[int(c_data[0][c_d].x/cell_size)][int(c_data[0][c_d].y/cell_size)][int(c_data[0][c_d].z/cell_size)][1] + c_data[1][c_d])/2).normalized()
 	# TIMING
-#	print("Fill grid: " + str((tim_prev-tim_start)*1000))
-#	tim_prev = Time.get_unix_time_from_system()
+	print("Fill grid: " + str((Time.get_unix_time_from_system()-tim_prev)*1000))
+	tim_prev = Time.get_unix_time_from_system()
 #	for x in range(grid.size()):
 #		for y in range(grid[x].size()):
 #			for z in range(grid[x][y].size()):
@@ -96,7 +95,7 @@ func marching_cubes(grid):
 	arr.resize(Mesh.ARRAY_MAX)
 	arr[Mesh.ARRAY_VERTEX] = PackedVector3Array()
 	arr[Mesh.ARRAY_NORMAL] = PackedVector3Array()
-	arr[Mesh.ARRAY_INDEX] = PackedInt32Array()
+#	arr[Mesh.ARRAY_INDEX] = PackedInt32Array()
 	
 	var map = 0
 	var index = 0
@@ -121,7 +120,7 @@ func marching_cubes(grid):
 					var indB = edge_table[tri_table[map][e]][1]
 					arr[Mesh.ARRAY_VERTEX].append(((Vector3(x,y,z) + indA + Vector3(x,y,z) + indB)- Vector3(size_x,0,size_z))*cell_size/2 )
 					arr[Mesh.ARRAY_NORMAL].append(((grid[x+indA.x][y+indA.y][z+indA.z][1] + grid[x+indB.x][y+indB.y][z+indB.z][1])/2).normalized())
-					arr[Mesh.ARRAY_INDEX].append(index)
+#					arr[Mesh.ARRAY_INDEX].append(index)
 					index += 1
 					# Calc surface normal when triangle finished
 					# TODO change to vertex normals for smoother finish
@@ -130,19 +129,23 @@ func marching_cubes(grid):
 #						arr[Mesh.ARRAY_NORMAL].append(face_normal)
 #						arr[Mesh.ARRAY_NORMAL].append(face_normal)
 #						arr[Mesh.ARRAY_NORMAL].append(face_normal)
+	# TIMING
+	print("Marching cubes: " + str((Time.get_unix_time_from_system()-tim_prev)*1000))
+	tim_prev = Time.get_unix_time_from_system()
+	
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arr)
 	mesh_inst.set_mesh(mesh)
 	add_child(mesh_inst)
-	
 	# TIMING
-	print("Marching cubes: " + str((tim_prev-tim_start)*1000))
+	print("Draw: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
 	tim_prev = Time.get_unix_time_from_system()
+	print(arr[Mesh.ARRAY_VERTEX].size())
 
 
 ########### COMPUTE #############
 
 # Create blank grid
-func generate_grid_compute(size:Vector3, cell_size:float):
+func generate_grid_compute(size:Vector3):
 	var grid = PackedInt32Array()
 	for x in range(size.x):
 		for y in range(size.y):
@@ -255,32 +258,32 @@ func marching_cubes_compute(grid:PackedInt32Array):
 	var out_vertices := vertices_bytes.to_float32_array()
 	var out_normals = normals_bytes.to_float32_array()
 	var temp := PackedVector3Array()
-	temp.resize(vertices.size())
 	var temp2 := PackedVector3Array()
-	temp2.resize(vertices.size())
-	var t_i = 0
 	for i in range(0,out_vertices.size(),4):
 		if Vector3(out_vertices[i],out_vertices[i+1],out_vertices[i+2]) != Vector3(0,0,0):
-			temp[t_i] = Vector3(out_vertices[i],out_vertices[i+1],out_vertices[i+2])
-			temp2[t_i] = Vector3(out_normals[i],out_normals[i+1],out_normals[i+2])
-			t_i += 1
+			temp.append(Vector3(out_vertices[i],out_vertices[i+1],out_vertices[i+2]))
+			temp2.append(Vector3(out_normals[i],out_normals[i+1],out_normals[i+2]))
 	
 	# TIMING
 	print("Translate data: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
 	
-	tim_prev = Time.get_unix_time_from_system()
+	
 	var mesh_inst = MeshInstance3D.new()
 	var mesh = ArrayMesh.new()
 	var arr = []
 	arr.resize(Mesh.ARRAY_MAX)
 	arr[Mesh.ARRAY_VERTEX] = temp
 	arr[Mesh.ARRAY_NORMAL] = temp2
+	
+	tim_prev = Time.get_unix_time_from_system()
+	
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arr)
 	mesh_inst.set_mesh(mesh)
 	add_child(mesh_inst)
 	# TIMING
 	print("Draw: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
 	tim_prev = Time.get_unix_time_from_system()
+	print(arr[Mesh.ARRAY_VERTEX].size())
 	
 
 var edge_table = (

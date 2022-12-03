@@ -7,7 +7,7 @@ extends Node3D
 var cell_size = 0.05
 var cloud_size = size/cell_size
 var point_cloud = DebugDraw.new_point_cloud(Vector3.ZERO, 20, Color.GREEN)
-var chunk_size = 1
+var chunk_size = 4
 
 var bake_interval = cell_size/4
 var circ_res = int(0.4/bake_interval)
@@ -21,7 +21,7 @@ func _ready():
 	print("Bake interval: " + str(bake_interval))
 	print("Circ res: " + str(circ_res))
 	print("\nTIMING")
-	var curves:Array[Curve3D] = [$Path3D.get_curve(),$Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve(), $Path3D5.get_curve(),$Path3D6.get_curve()]
+	var curves:Array[Curve3D] = [$Path3D.get_curve(),$Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve(), $Path3D5.get_curve(),$Path3D6.get_curve(),$Path3D7.get_curve()]
 	
 #	var grid = generate_grid(cloud_size)
 #	fill_grid(grid,curves)
@@ -259,13 +259,14 @@ func marching_cubes_compute(grid:PackedInt32Array):
 	var out_normals = normals_bytes.to_float32_array()
 	var temp := PackedVector3Array()
 	var temp2 := PackedVector3Array()
-	for i in range(0,out_vertices.size(),4):
+	for i in range(0,out_vertices.size(),3):
 		if Vector3(out_vertices[i],out_vertices[i+1],out_vertices[i+2]) != Vector3(0,0,0):
 			temp.append(Vector3(out_vertices[i],out_vertices[i+1],out_vertices[i+2]))
 			temp2.append(Vector3(out_normals[i],out_normals[i+1],out_normals[i+2]))
-	
+#	temp = PackedVector3Array(Array(out_vertices))
+#	temp2 = PackedVector3Array(Array(out_normals))
 	# TIMING
-	print("Translate data: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
+	print("Clean data: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
 	
 	
 	var mesh_inst = MeshInstance3D.new()

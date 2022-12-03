@@ -4,10 +4,10 @@
 #include "triangle_table.glsl"
 
 const float voxel_size = 0.05;
-const uint chunk_size = 4;
+const uint chunk_size = 1;
+// const float border_dist = 0.2;
 
-
-uvec3 num_wg = gl_NumWorkGroups;
+// uvec3 num_wg = gl_NumWorkGroups;
 
 // CompactVec3, use to fit in 12 bytes, vec3 is padded to 16 bytes
 struct CVec3 {
@@ -16,18 +16,22 @@ struct CVec3 {
 
 // Invocations in the (x, y, z) dimension
 layout(local_size_x = chunk_size, local_size_y = chunk_size, local_size_z = chunk_size) in;
-uvec3 wg_size = gl_WorkGroupSize;
 
-layout(set = 0, binding = 0) readonly buffer InputCloud{
-    int cloud[];
+uvec3 wg_size = gl_WorkGroupSize;
+layout(set = 0, binding = 0) readonly buffer SFDSize{
+    int sfd_size[3];
 };
 
-layout(set = 0, binding = 1, std430) restrict buffer VertexBuffer {
+layout(set = 0, binding = 2, std430) readonly buffer SDF {
+    float sdf[];
+};
+
+layout(set = 0, binding = 3, std430) restrict buffer VertexBuffer {
     CVec3 vertices[];
     // vec3 vertices[];
 };
 
-layout(set = 0, binding = 2, std430) writeonly buffer NormalBuffer {
+layout(set = 0, binding = 4, std430) writeonly buffer NormalBuffer {
     CVec3 normals[];
     // vec3 normals[];
 };
@@ -35,24 +39,24 @@ layout(set = 0, binding = 2, std430) writeonly buffer NormalBuffer {
 void main() {
     uvec3 i_glob = gl_GlobalInvocationID;
     // Make sure this is not a border cell (otherwise neighbor lookup in the next step would fail):
-    if( i_glob.x >= num_wg.x*chunk_size-1 ||
-		  i_glob.y >= num_wg.y*chunk_size-1 ||
-		  i_glob.z >= num_wg.z*chunk_size-1 )
+    if( i_glob.x >= sfd_size[0]-1 ||
+		  i_glob.y >= sfd_size[1]-1 ||
+		  i_glob.z >= sfd_size[2]-1 )
 		  return;
 
     // Calculate connection index
-    uint y_up = num_wg.x*wg_size.x;
-    uint z_up = y_up*num_wg.y*wg_size.y;
-    uint cloud_i = (z_up*i_glob.z + y_up*i_glob.y + i_glob.x);
-    uint vertex_i = cloud_i*15;
-    int conn_index = int((cloud[cloud_i]) +
-                         (cloud[cloud_i + 1] << 1) +
-                         (cloud[cloud_i + z_up + 1] << 2) +
-                         (cloud[cloud_i + z_up] << 3) +
-                         (cloud[cloud_i + y_up] << 4) +
-                         (cloud[cloud_i + y_up + 1] << 5 ) +
-                         (cloud[cloud_i + y_up + z_up + 1] << 6) + 
-                         (cloud[cloud_i + y_up + z_up] << 7));
+    uint y_up = sfd_size[0];
+    uint z_up = y_up*sfd_size[1];
+    uint sdf_i = (z_up*i_glob.z + y_up*i_glob.y + i_glob.x);
+    uint vertex_i = sdf_i*15;
+    int conn_index = int(((floatBitsToInt(sdf[sdf_i]) & 0x80) >> 31) +
+                         ((floatBitsToInt(sdf[sdf_i + 1]) & 0x80) >> 30) +
+                         ((floatBitsToInt(sdf[sdf_i + z_up + 1]) & 0x80) >> 29) +
+                         ((floatBitsToInt(sdf[sdf_i + z_up]) & 0x80) >> 28) +
+                         ((floatBitsToInt(sdf[sdf_i + y_up]) & 0x80) >> 27) +
+                         ((floatBitsToInt(sdf[sdf_i + y_up + 1]) & 0x80) >> 26) +
+                         ((floatBitsToInt(sdf[sdf_i + y_up + z_up + 1]) & 0x80) >> 25) + 
+                         ((floatBitsToInt(sdf[sdf_i + y_up + z_up]) & 0x80 >> 24)));
 
     int tri_vert_indices[15] = tConnectionTable[conn_index];
     

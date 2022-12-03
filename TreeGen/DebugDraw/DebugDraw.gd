@@ -26,7 +26,6 @@ class PointCloud extends MeshInstance3D:
 		mat.point_size = p_size
 		mat.albedo_color = color
 	
-	
 	func add_point(p):
 		cloud.append(p)
 	func add_points(p):

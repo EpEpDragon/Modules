@@ -33,7 +33,7 @@ func _ready():
 		baked_points.append_array(c.get_baked_points())
 		
 	run_cumpte_shaders()
-	point_cloud.construct()
+#	point_cloud.construct()
 #	point_cloud2.construct()
 
 # Create blank grid

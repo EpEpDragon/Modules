@@ -60,7 +60,7 @@ void main() {
     int conn_index = 0;
     if (sdf[sdf_i]  < 0) conn_index |= 1;
     if (sdf[sdf_i + 1]  < 0) conn_index |= 2;
-    if (sdf[sdf_i + +z_up + 1]  < 0) conn_index |= 4;
+    if (sdf[sdf_i + z_up + 1]  < 0) conn_index |= 4;
     if (sdf[sdf_i + z_up]  < 0) conn_index |= 8;
     if (sdf[sdf_i + y_up]  < 0) conn_index |= 16;
     if (sdf[sdf_i + y_up + 1]  < 0) conn_index |= 32;
@@ -74,7 +74,10 @@ void main() {
             int conn[6] = eConnectionTable[tri_vert_indices[i]];
             uvec3 indA = uvec3(conn[0], conn[1], conn[2]);
             uvec3 indB = uvec3(conn[3], conn[4], conn[5]);
-            vec3 point = (2*i_glob + indA + indB)*voxel_size/2;
+            // vec3 point = (i_glob + (indA + indB)/2)*voxel_size;
+            float weightA = sdf[sdf_i + indA.x + indA.y*y_up + indA.z*z_up];
+            float weightB = sdf[sdf_i + indB.x + indB.y*y_up + indB.z*z_up];
+            vec3 point = (i_glob + mix(indA, indB, abs(weightA/(weightA-weightB))))*voxel_size;
             vertices[vertex_i].x = point.x - 2.5;
             vertices[vertex_i].y = point.y;
             vertices[vertex_i].z = point.z - 2.5;

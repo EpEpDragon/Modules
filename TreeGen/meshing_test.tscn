@@ -71,6 +71,7 @@ mesh = SubResource("BoxMesh_je6ei")
 
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.56711, -0.5, -0.0210794)
+visible = false
 mesh = SubResource("SphereMesh_ihuli")
 
 [node name="Node3D" type="Node3D" parent="."]

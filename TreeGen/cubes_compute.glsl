@@ -4,7 +4,7 @@
 #include "triangle_table.glsl"
 
 const float voxel_size = 0.05;
-const uint chunk_size = 1;
+const uint chunk_size = 4;
 // const float border_dist = 0.2;
 
 // uvec3 num_wg = gl_NumWorkGroups;
@@ -16,8 +16,8 @@ struct CVec3 {
 
 // Invocations in the (x, y, z) dimension
 layout(local_size_x = chunk_size, local_size_y = chunk_size, local_size_z = chunk_size) in;
-
 uvec3 wg_size = gl_WorkGroupSize;
+
 layout(set = 0, binding = 0) readonly buffer SFDSize{
     int sfd_size[3];
 };
@@ -49,14 +49,23 @@ void main() {
     uint z_up = y_up*sfd_size[1];
     uint sdf_i = (z_up*i_glob.z + y_up*i_glob.y + i_glob.x);
     uint vertex_i = sdf_i*15;
-    int conn_index = int(((floatBitsToInt(sdf[sdf_i]) & 0x80) >> 31) +
-                         ((floatBitsToInt(sdf[sdf_i + 1]) & 0x80) >> 30) +
-                         ((floatBitsToInt(sdf[sdf_i + z_up + 1]) & 0x80) >> 29) +
-                         ((floatBitsToInt(sdf[sdf_i + z_up]) & 0x80) >> 28) +
-                         ((floatBitsToInt(sdf[sdf_i + y_up]) & 0x80) >> 27) +
-                         ((floatBitsToInt(sdf[sdf_i + y_up + 1]) & 0x80) >> 26) +
-                         ((floatBitsToInt(sdf[sdf_i + y_up + z_up + 1]) & 0x80) >> 25) + 
-                         ((floatBitsToInt(sdf[sdf_i + y_up + z_up]) & 0x80 >> 24)));
+    // int conn_index = int(((int(-sign(sdf[sdf_i]))) +
+    //                      (int(-sign(sdf[sdf_i + 1])) << 1) +
+    //                      (int(-sign(sdf[sdf_i + z_up + 1])) << 2) +
+    //                      (int(-sign(sdf[sdf_i + z_up])) << 3) +
+    //                      (int(-sign(sdf[sdf_i + y_up])) << 4) +
+    //                      (int(-sign(sdf[sdf_i + y_up + 1])) << 5) +
+    //                      (int(-sign(sdf[sdf_i + y_up + z_up + 1])) << 6) + 
+    //                      (int(-sign(sdf[sdf_i + y_up + z_up])) << 7)));
+    int conn_index = 0;
+    if (sdf[sdf_i]  < 0) conn_index |= 1;
+    if (sdf[sdf_i + 1]  < 0) conn_index |= 2;
+    if (sdf[sdf_i + +z_up + 1]  < 0) conn_index |= 4;
+    if (sdf[sdf_i + z_up]  < 0) conn_index |= 8;
+    if (sdf[sdf_i + y_up]  < 0) conn_index |= 16;
+    if (sdf[sdf_i + y_up + 1]  < 0) conn_index |= 32;
+    if (sdf[sdf_i + y_up + z_up + 1]  < 0) conn_index |= 64;
+    if (sdf[sdf_i + y_up + z_up]  < 0) conn_index |= 128;
 
     int tri_vert_indices[15] = tConnectionTable[conn_index];
     

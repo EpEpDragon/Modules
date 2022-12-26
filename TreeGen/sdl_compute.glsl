@@ -1,19 +1,19 @@
 #[compute]
 # version 450
 
-const float voxel_size = 0.025;
+const float voxel_size = 0.05;
 const uint chunk_size = 4;
 const float border_dist = 0.2;
+
+struct CVec3 {
+    float x,y,z;
+};
 
 // Invocations in the (x, y, z) dimension
 layout(local_size_x = chunk_size, local_size_y = chunk_size, local_size_z = chunk_size) in;
 
 layout(set = 0, binding = 0) readonly buffer SFDSize{
     int sfd_size[3];
-};
-
-struct CVec3 {
-    float x,y,z;
 };
 
 // TODO change to use vec3 i.e. pad input to 16bytes

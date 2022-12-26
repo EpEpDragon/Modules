@@ -4,13 +4,13 @@ extends Node3D
 # About: circ_res = 20 - bake_interval * 100
 
 @export var size := Vector3(5,5,5)
-var cell_size := 0.025
+var cell_size := 0.05
 var cloud_size := size/cell_size
 var point_cloud = DebugDraw.new_point_cloud(Vector3.ZERO, 5, Color.GREEN)
 var point_cloud2 = DebugDraw.new_point_cloud(Vector3.ZERO, 20, Color.RED)
 var chunk_size = 4
 
-var bake_interval = cell_size/2
+var bake_interval = cell_size/2.0
 var circ_res = int(0.4/bake_interval)
 var radius = 0.2
 
@@ -216,6 +216,7 @@ func run_cumpte_shaders():
 	b_points_uniform.add_id(b_points_buffer)
 	
 	# SDF buffer
+#	var sdf := PackedFloat32Array([0,0,0, 0,0,0, 0,0,0,  0,0,0, 0,-1,0, 0,0,0,  0,0,0, 0,0,0, 0,0,0])
 	var sdf := PackedFloat32Array()
 	sdf.resize(cloud_size.x*cloud_size.y*cloud_size.z)
 	var sdf_bytes := sdf.to_byte_array()
@@ -256,7 +257,7 @@ func run_cumpte_shaders():
 	rd.compute_list_bind_uniform_set(sdf_list, sdf_set, 0)
 	rd.compute_list_dispatch(sdf_list, int(cloud_size.x/chunk_size), int(cloud_size.y/chunk_size), int(cloud_size.z/chunk_size))
 	rd.compute_list_end()
-	
+
 	# Run SDF
 	tim_prev = Time.get_unix_time_from_system()
 	rd.submit()
@@ -264,77 +265,73 @@ func run_cumpte_shaders():
 	# TIMING
 	print("SDF build: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
 	tim_prev = Time.get_unix_time_from_system()
+
+#	sdf_bytes = rd.buffer_get_data(sdf_buffer)
+#	sdf = sdf_bytes.to_float32_array()
+#
+#	# TIMING
+#	print("Pull: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
+#	tim_prev = Time.get_unix_time_from_system()
+
+#	var temp = []
+#	for i in range(sdf.size()):
+##		temp.append(sdf[i])
+#		if sdf[i] <= 0:
+#			var point = Vector3(i % int(cloud_size.x), int(i / cloud_size.x) % int(cloud_size.y), i / int(cloud_size.x * cloud_size.y))
+#			point_cloud.add_point(point*cell_size-Vector3(2.5,0,2.5))
+#	point_cloud2.add_points(baked_points)
 	
-	sdf_bytes = rd.buffer_get_data(sdf_buffer)
-	sdf = sdf_bytes.to_float32_array()
-	
+	# Cubes compute pipeline
+	var cubes_list := rd.compute_list_begin()
+	rd.compute_list_bind_compute_pipeline(cubes_list, cubes_pipe)
+	rd.compute_list_bind_uniform_set(cubes_list, cubes_set, 0)
+	rd.compute_list_dispatch(cubes_list, int(cloud_size.x/chunk_size), int(cloud_size.y/chunk_size), int(cloud_size.z/chunk_size))
+	rd.compute_list_end()
+
+	# Run Cubes
+	rd.submit()
+	rd.sync()
 	# TIMING
-	print("Pull: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
+	print("Marching cubes: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
 	tim_prev = Time.get_unix_time_from_system()
 	
-	var temp = []
-	for i in range(sdf.size()):
-		temp.append(sdf[i])
-		if sdf[i] <= 0:
-			var point = Vector3(i % int(cloud_size.x), int(i / cloud_size.x) % int(cloud_size.y), i / int(cloud_size.x * cloud_size.y))
-			point_cloud.add_point(point*cell_size-Vector3(2.5,0,2.5))
-	
-	
-#	point_cloud2.add_points(baked_points)
-#	# Cubes compute pipeline
-#	var cubes_list := rd.compute_list_begin()
-#	rd.compute_list_bind_compute_pipeline(cubes_list, cubes_pipe)
-#	rd.compute_list_bind_uniform_set(cubes_list, sdf_set, 0)
-##	rd.compute_list_dispatch(compute_list, ceil(cloud_size.x/(8*cell_size)), ceil(cloud_size.y/(8*cell_size)), ceil(cloud_size.z/(8*cell_size)))
-#	rd.compute_list_dispatch(cubes_list, cloud_size.x/chunk_size, cloud_size.y/chunk_size, cloud_size.z/chunk_size)
-#	rd.compute_list_end()
-#
-#	# Run ubes
-#	rd.submit()
-#	rd.sync()
-	
-	# TIMING
-#	print("Marching cubes: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
-#	tim_prev = Time.get_unix_time_from_system()
-	
 	# Read back the data from the buffer
-#	vertices_bytes = rd.buffer_get_data(vertex_buffer)
-#	normals_bytes = rd.buffer_get_data(normal_buffer)
+	vertices_bytes = rd.buffer_get_data(vertex_buffer)
+	normals_bytes = rd.buffer_get_data(normal_buffer)
 	
 	# TIMING
-#	print("Pull data: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
-#	tim_prev = Time.get_unix_time_from_system()
+	print("Pull data: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
+	tim_prev = Time.get_unix_time_from_system()
 	
-#	var out_vertices := vertices_bytes.to_float32_array()
-#	var out_normals = normals_bytes.to_float32_array()
-#	var temp := PackedVector3Array()
-#	var temp2 := PackedVector3Array()
-#	for i in range(0,out_vertices.size(),3):
-#		if Vector3(out_vertices[i],out_vertices[i+1],out_vertices[i+2]) != Vector3(0,0,0):
-#			temp.append(Vector3(out_vertices[i],out_vertices[i+1],out_vertices[i+2]))
-#			temp2.append(Vector3(out_normals[i],out_normals[i+1],out_normals[i+2]))
+	var out_vertices := vertices_bytes.to_float32_array()
+	var out_normals = normals_bytes.to_float32_array()
+	var temp := PackedVector3Array()
+	var temp2 := PackedVector3Array()
+	for i in range(0,out_vertices.size(),3):
+		if Vector3(out_vertices[i],out_vertices[i+1],out_vertices[i+2]) != Vector3(0,0,0):
+			temp.append(Vector3(out_vertices[i],out_vertices[i+1],out_vertices[i+2]))
+			temp2.append(Vector3(out_normals[i],out_normals[i+1],out_normals[i+2]))
 #	temp = PackedVector3Array(Array(out_vertices))
 #	temp2 = PackedVector3Array(Array(out_normals))
 	# TIMING
-#	print("Clean data: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
-#
-#
-#	var mesh_inst = MeshInstance3D.new()
-#	var mesh = ArrayMesh.new()
-#	var arr = []
-#	arr.resize(Mesh.ARRAY_MAX)
-#	arr[Mesh.ARRAY_VERTEX] = temp
-#	arr[Mesh.ARRAY_NORMAL] = temp2
-#
-#	tim_prev = Time.get_unix_time_from_system()
-#
-#	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arr)
-#	mesh_inst.set_mesh(mesh)
-#	add_child(mesh_inst)
-#	# TIMING
-#	print("Draw: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
-#	tim_prev = Time.get_unix_time_from_system()
-#	print(arr[Mesh.ARRAY_VERTEX].size())
+	print("Clean data: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
+	
+	var mesh_inst = MeshInstance3D.new()
+	var mesh = ArrayMesh.new()
+	var arr = []
+	arr.resize(Mesh.ARRAY_MAX)
+	arr[Mesh.ARRAY_VERTEX] = temp
+	arr[Mesh.ARRAY_NORMAL] = temp2
+	
+	tim_prev = Time.get_unix_time_from_system()
+
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arr)
+	mesh_inst.set_mesh(mesh)
+	add_child(mesh_inst)
+	# TIMING
+	print("Draw: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
+	tim_prev = Time.get_unix_time_from_system()
+	print(arr[Mesh.ARRAY_VERTEX].size())
 	
 
 var edge_table = (

@@ -27,14 +27,18 @@ layout(set = 0, binding = 2, std430) readonly buffer SDF {
 };
 
 layout(set = 0, binding = 3, std430) restrict buffer VertexBuffer {
-    CVec3 vertices[];
-    // vec3 vertices[];
+    CVec3 vertices[]; 
+    // vec4 vertices[];
 };
 
 layout(set = 0, binding = 4, std430) writeonly buffer NormalBuffer {
     CVec3 normals[];
-    // vec3 normals[];
+    // vec4 normals[];
 };
+
+ layout(set = 0, binding = 5, std430) restrict buffer NumberOfVertices{
+    uint number_of_vertices;
+ };
 
 void main() {
     uvec3 i_glob = gl_GlobalInvocationID;
@@ -48,15 +52,7 @@ void main() {
     uint y_up = sfd_size[0];
     uint z_up = y_up*sfd_size[1];
     uint sdf_i = (z_up*i_glob.z + y_up*i_glob.y + i_glob.x);
-    uint vertex_i = sdf_i*15;
-    // int conn_index = int(((int(-sign(sdf[sdf_i]))) +
-    //                      (int(-sign(sdf[sdf_i + 1])) << 1) +
-    //                      (int(-sign(sdf[sdf_i + z_up + 1])) << 2) +
-    //                      (int(-sign(sdf[sdf_i + z_up])) << 3) +
-    //                      (int(-sign(sdf[sdf_i + y_up])) << 4) +
-    //                      (int(-sign(sdf[sdf_i + y_up + 1])) << 5) +
-    //                      (int(-sign(sdf[sdf_i + y_up + z_up + 1])) << 6) + 
-    //                      (int(-sign(sdf[sdf_i + y_up + z_up])) << 7)));
+
     int conn_index = 0;
     if (sdf[sdf_i]  < 0) conn_index |= 1;
     if (sdf[sdf_i + 1]  < 0) conn_index |= 2;
@@ -68,39 +64,40 @@ void main() {
     if (sdf[sdf_i + y_up + z_up]  < 0) conn_index |= 128;
 
     int tri_vert_indices[15] = tConnectionTable[conn_index];
-    
-    for (int i=14; i>-1; i--) {
-        if (tri_vert_indices[i] > -1) {
-            int conn[6] = eConnectionTable[tri_vert_indices[i]];
-            uvec3 indA = uvec3(conn[0], conn[1], conn[2]);
-            uvec3 indB = uvec3(conn[3], conn[4], conn[5]);
-            // vec3 point = (i_glob + (indA + indB)/2)*voxel_size;
-            float weightA = sdf[sdf_i + indA.x + indA.y*y_up + indA.z*z_up];
-            float weightB = sdf[sdf_i + indB.x + indB.y*y_up + indB.z*z_up];
-            vec3 point = (i_glob + mix(indA, indB, abs(weightA/(weightA-weightB))))*voxel_size;
-            vertices[vertex_i].x = point.x - 2.5;
-            vertices[vertex_i].y = point.y;
-            vertices[vertex_i].z = point.z - 2.5;
-            // vertices[vertex_i] = point - vec3(2.5,0,2.5);
+    uint vertex_i = 0;
+    for (int i=14; i>-1; i -= 3) {
+        if (tri_vert_indices[i] != -1) {
+            // Atomic counter for tight buffer
+            vertex_i = atomicAdd(number_of_vertices, 3);
+            // Add next 3 verts in series
+            for (int tri_i = 0; tri_i < 3; tri_i++){
+                int conn[6] = eConnectionTable[tri_vert_indices[i - tri_i]];
+                uvec3 indA = uvec3(conn[0], conn[1], conn[2]);
+                uvec3 indB = uvec3(conn[3], conn[4], conn[5]);
+                float weightA = sdf[sdf_i + indA.x + indA.y*y_up + indA.z*z_up];
+                float weightB = sdf[sdf_i + indB.x + indB.y*y_up + indB.z*z_up];
+                vec3 point = (i_glob + mix(indA, indB, abs(weightA/(weightA-weightB))))*voxel_size;
+                vertices[vertex_i + tri_i].x = point.x - 2.5;
+                vertices[vertex_i + tri_i].y = point.y;
+                vertices[vertex_i + tri_i].z = point.z - 2.5;
+                // vertices[vertex_i].xyz = point - vec3(2.5,0,2.5);
+            }
             // Add normals every 3 verts
-            if (i % 3 == 0){
-                // vec3 face_normal = normalize( cross( (vertices[vertex_i]-vertices[vertex_i-1]), (vertices[vertex_i]-vertices[vertex_i-2]) ) );
-                vec3 face_normal = normalize( cross( (vec3(vertices[vertex_i].x,vertices[vertex_i].y,vertices[vertex_i].z)-vec3(vertices[vertex_i-1].x,vertices[vertex_i-1].y,vertices[vertex_i-1].z)), 
-                                                     (vec3(vertices[vertex_i].x,vertices[vertex_i].y,vertices[vertex_i].z)-vec3(vertices[vertex_i-2].x,vertices[vertex_i-2].y,vertices[vertex_i-2].z)) ) );
+                vec3 face_normal = normalize( cross( (vec3(vertices[vertex_i+2].x,vertices[vertex_i+2].y,vertices[vertex_i+2].z)-vec3(vertices[vertex_i+1].x,vertices[vertex_i+1].y,vertices[vertex_i+1].z)), 
+                                                    (vec3(vertices[vertex_i+2].x,vertices[vertex_i+2].y,vertices[vertex_i+2].z)-vec3(vertices[vertex_i].x,vertices[vertex_i].y,vertices[vertex_i].z)) ) );
                 normals[vertex_i].x = face_normal.x;
                 normals[vertex_i].y = face_normal.y;
                 normals[vertex_i].z = face_normal.z;
-                normals[vertex_i-1].x = face_normal.x;
-                normals[vertex_i-1].y = face_normal.y;
-                normals[vertex_i-1].z = face_normal.z;
-                normals[vertex_i-2].x = face_normal.x;
-                normals[vertex_i-2].y = face_normal.y;
-                normals[vertex_i-2].z = face_normal.z;
-                // normals[vertex_i] = face_normal;
-                // normals[vertex_i-1] = face_normal;
-                // normals[vertex_i-2] = face_normal;
-            }
+                normals[vertex_i+1].x = face_normal.x;
+                normals[vertex_i+1].y = face_normal.y;
+                normals[vertex_i+1].z = face_normal.z;
+                normals[vertex_i+2].x = face_normal.x;
+                normals[vertex_i+2].y = face_normal.y;
+                normals[vertex_i+2].z = face_normal.z;
+                // normals[vertex_i].xyz = face_normal;
+                // normals[vertex_i-1].xyz = face_normal;
+                // normals[vertex_i-2].xyz = face_normal;
+            // }
         }
-        vertex_i += 1;
     }
 }

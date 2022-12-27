@@ -6,6 +6,7 @@
 [sub_resource type="Environment" id="Environment_m8j4c"]
 background_mode = 1
 ambient_light_source = 2
+ambient_light_color = Color(0.54902, 0.54902, 0.54902, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_je6ei"]
 
@@ -113,17 +114,6 @@ curve = SubResource("Curve3D_737ux")
 [node name="Path3D7" type="Path3D" parent="Node3D2"]
 curve = SubResource("Curve3D_pj3bd")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(4.37114e-08, -3.82137e-15, 1, -8.74228e-08, -1, 2.5411e-21, 1, -8.74228e-08, -4.37114e-08, 0, 0, 0)
-
-[node name="DirectionalLight3D2" type="DirectionalLight3D" parent="."]
-
-[node name="DirectionalLight3D3" type="DirectionalLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, -1, 8.74228e-08, 0, -8.74228e-08, -1, 0, 0, 0)
-
-[node name="DirectionalLight3D4" type="DirectionalLight3D" parent="."]
-transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 0, 0, 0)
-
 [node name="Camera" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.859, 2.60959)
 size = 2.0
@@ -131,6 +121,10 @@ script = ExtResource("2_15jvw")
 movespeed = 2.0
 
 [node name="SpotLight3D" type="SpotLight3D" parent="Camera"]
+visible = false
 spot_range = 42.57
 spot_attenuation = 0.164939
 spot_angle = 90.0
+
+[node name="DirectionalLight3D5" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.931799, 0.109173, -0.346168, -6.82868e-09, 0.953696, 0.300772, 0.362975, -0.280259, 0.888653, -0.373438, 0, 10.4267)

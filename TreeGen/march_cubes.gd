@@ -20,6 +20,13 @@ var tim_prev = tim_start
 var baked_points = PackedFloat32Array()
 
 func _ready():
+	var input = PackedVector3Array([Vector3(10,5,7)])
+	var bytes = input.to_byte_array()
+	print("Input: ", input)
+	print("Bytes: ", bytes)
+	bytes.decode_float(0)
+	print("Decode: ", bytes)
+	
 	print("Bake interval: " + str(bake_interval))
 	print("Circ res: " + str(circ_res))
 	print("\nTIMING")
@@ -27,11 +34,14 @@ func _ready():
 	var curves:Array[Curve3D] = [$Path3D.get_curve(),$Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve(), $Path3D5.get_curve(),$Path3D6.get_curve(),$Path3D7.get_curve()]
 	
 	# Construct array of baked points to pass to GPU
-	baked_points.append_array([0,1,0,0])
-	for c in curves:
-		c.bake_interval = bake_interval
-		for point in c.get_baked_points():
-			baked_points.append_array([point.x, point.y, point.z, 0])
+#	baked_points.append_array([0,1,0,0])
+	for c in curves.size():
+		curves[c].bake_interval = bake_interval
+		var points = curves[c].get_baked_points()
+		baked_points.append_array([points[0].x, points[0].y, points[0].z, 0])
+		baked_points.append_array([points[-1].x, points[-1].y, points[-1].z, 0])
+#		for point in c.get_baked_points():
+#			baked_points.append_array([point.x, point.y, point.z, 0])
 		
 	run_cumpte_shaders()
 #	point_cloud.construct()
@@ -189,9 +199,9 @@ func run_cumpte_shaders():
 	
 	# Read back the data from the buffer
 	number_of_vertices_bytes = rd.buffer_get_data(number_of_vertices_buffer)
-	var size = number_of_vertices_bytes.to_int32_array()[0]*12 # Number of vertices to bytes (3 tringles * 4 bytes per triangle)
-	vertices_bytes = rd.buffer_get_data(vertex_buffer, size)
-	normals_bytes = rd.buffer_get_data(normal_buffer, size)
+	var size = number_of_vertices_bytes.to_int32_array()[0]*12 # Number of vertices to bytes (3 verts * 4 bytes per triangle)
+	vertices_bytes = rd.buffer_get_data(vertex_buffer, 0, size)
+	normals_bytes = rd.buffer_get_data(normal_buffer, 0, size)
 	
 	# TIMING
 	print("Pull data: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))

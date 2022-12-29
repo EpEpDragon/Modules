@@ -21,45 +21,45 @@ point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_7gku2"]
 _data = {
-"points": PackedVector3Array(0, -1, 0, 0, 1, 0, 0, 1, 0, -0.744417, -0.820098, 0.717944, 0.744417, 0.820098, -0.717944, -0.180882, 2.09223, -1.55366),
+"points": PackedVector3Array(0, -1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0.744417, 0.820098, -0.717944, -0.180882, 2.09223, -1.55366),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_tsb62"]
 _data = {
-"points": PackedVector3Array(1.06301, 0.0235772, -1.24645, -1.06301, -0.0235772, 1.24645, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, -1.19059, 2.07368, 0.942433),
+"points": PackedVector3Array(1.06301, 0.0235772, -1.24645, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0.5, 0, -1.19059, 2.07368, 0.942433),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_lnyg2"]
 _data = {
-"points": PackedVector3Array(0, -0.985015, 0.154412, 0, 0.985015, -0.154412, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2.5, 0),
+"points": PackedVector3Array(0, -0.985015, 0.154412, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2.5, 0),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_qrcdk"]
 _data = {
-"points": PackedVector3Array(0, 0, 0, 0, 0, 0, 0, 1, 0, -0.462071, -0.303935, 2.15469, 0.462071, 0.303935, -2.15469, 1.22639, 1.60787, -0.188038),
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0.462071, 0.303935, -2.15469, 1.22639, 1.60787, -0.188038),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_737ux"]
 _data = {
-"points": PackedVector3Array(-0.421398, -0.89859, 0.026143, 0.421398, 0.89859, -0.026143, 0, 2.5, 0, 0, 0, 0, 0, 0, 0, 0.436769, 3.36869, -0.85665),
+"points": PackedVector3Array(-0.421398, -0.89859, 0.026143, 0, 0, 0, 0, 2.5, 0, 0, 0, 0, 0, 0, 0, 0.912727, 3.49256, -0.749443),
 "tilts": PackedFloat32Array(0, 0)
 }
 point_count = 2
 
 [sub_resource type="Curve3D" id="Curve3D_pj3bd"]
 _data = {
-"points": PackedVector3Array(0.522977, -0.82425, -0.111696, -0.522977, 0.82425, 0.111696, 0, 2.5, 0, 0.749927, 0.349034, 1.31387, -0.749927, -0.349034, -1.31387, -1.24898, 3.09058, 0.0415649, 0, 0, 0, 0, 0, 0, -0.65076, 3.9269, -1.25209),
-"tilts": PackedFloat32Array(0, 0, 0)
+"points": PackedVector3Array(0.522977, -0.82425, -0.111696, 0, 0, 0, 0, 2.5, 0, 0, 0, 0, 0, 0, 0, -1.47968, 4.04833, -0.860553),
+"tilts": PackedFloat32Array(0, 0)
 }
-point_count = 3
+point_count = 2
 
 [node name="Node3D" type="Node3D"]
 

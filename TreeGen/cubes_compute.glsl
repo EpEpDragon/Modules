@@ -53,6 +53,7 @@ void main() {
     uint z_up = y_up*sfd_size[1];
     uint sdf_i = (z_up*i_glob.z + y_up*i_glob.y + i_glob.x);
 
+    // IDK if this or the block below is faster, seems to have the same performace
     int conn_index = 0;
     if (sdf[sdf_i]  < 0) conn_index |= 1;
     if (sdf[sdf_i + 1]  < 0) conn_index |= 2;
@@ -62,6 +63,17 @@ void main() {
     if (sdf[sdf_i + y_up + 1]  < 0) conn_index |= 32;
     if (sdf[sdf_i + y_up + z_up + 1]  < 0) conn_index |= 64;
     if (sdf[sdf_i + y_up + z_up]  < 0) conn_index |= 128;
+
+    // int conn_index = (
+    //         (mix(0, 1, sdf[sdf_i]  < 0)) |
+    //         (mix(0, 1, sdf[sdf_i + 1]  < 0) << 1) |
+    //         (mix(0, 1, sdf[sdf_i + z_up + 1]  < 0) << 2) |
+    //         (mix(0, 1, sdf[sdf_i + z_up]  < 0) << 3) |
+    //         (mix(0, 1, sdf[sdf_i + y_up]  < 0) << 4) |
+    //         (mix(0, 1, sdf[sdf_i + y_up + 1]  < 0) << 5) |
+    //         (mix(0, 1, sdf[sdf_i + y_up + z_up + 1]  < 0) << 6) |
+    //         (mix(0, 1, sdf[sdf_i + y_up + z_up]  < 0) << 7)
+    // );
 
     int tri_vert_indices[15] = tConnectionTable[conn_index];
     uint vertex_i = 0;

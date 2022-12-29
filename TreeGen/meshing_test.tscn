@@ -75,21 +75,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.56711, -0.5, -0.0210794)
 visible = false
 mesh = SubResource("SphereMesh_ihuli")
 
-[node name="Node3D" type="Node3D" parent="."]
-visible = false
-
-[node name="Path3D" type="Path3D" parent="Node3D"]
-curve = SubResource("Curve3D_eum13")
-
-[node name="Path3D2" type="Path3D" parent="Node3D"]
-curve = SubResource("Curve3D_7gku2")
-
-[node name="Path3D3" type="Path3D" parent="Node3D"]
-curve = SubResource("Curve3D_tsb62")
-
-[node name="Path3D4" type="Path3D" parent="Node3D"]
-curve = SubResource("Curve3D_lnyg2")
-
 [node name="Node3D2" type="Node3D" parent="."]
 script = ExtResource("2_6etss")
 

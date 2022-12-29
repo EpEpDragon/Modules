@@ -22,15 +22,10 @@ var baked_points = PackedFloat32Array()
 func _ready():
 	var input = PackedVector3Array([Vector3(10,5,7)])
 	var bytes = input.to_byte_array()
-	print("Input: ", input)
-	print("Bytes: ", bytes)
-	bytes.decode_float(0)
-	print("Decode: ", bytes)
 	
 	print("Bake interval: " + str(bake_interval))
 	print("Circ res: " + str(circ_res))
 	print("\nTIMING")
-#	,$Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve(), $Path3D5.get_curve(),$Path3D6.get_curve(),$Path3D7.get_curve()
 	var curves:Array[Curve3D] = [$Path3D.get_curve(),$Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve(), $Path3D5.get_curve(),$Path3D6.get_curve(),$Path3D7.get_curve()]
 	
 	# Construct array of baked points to pass to GPU
@@ -40,56 +35,12 @@ func _ready():
 		var points = curves[c].get_baked_points()
 		baked_points.append_array([points[0].x, points[0].y, points[0].z, 0])
 		baked_points.append_array([points[-1].x, points[-1].y, points[-1].z, 0])
-#		for point in c.get_baked_points():
-#			baked_points.append_array([point.x, point.y, point.z, 0])
 		
 	run_cumpte_shaders()
 #	point_cloud.construct()
 #	point_cloud2.construct()
 
 ########### COMPUTE #############
-
-# Create blank grid
-func generate_grid_compute(size:Vector3):
-	var grid = PackedInt32Array()
-	for x in range(size.x):
-		for y in range(size.y):
-			for z in range(size.z):
-				grid.append(0)
-	# TIMING
-	print("Generate grid: " + str((Time.get_unix_time_from_system() - tim_prev)))
-	tim_prev = Time.get_unix_time_from_system()
-	return grid
-
-
-func fill_grid_compute(grid, curves:Array[Curve3D]):
-	var prev_p = Vector3(0,1,0)
-	var norm
-	var norm_prev
-	for c in curves:
-		c.set_bake_interval(bake_interval)
-		var points = c.get_baked_points()
-		for p in points:
-			norm = (p-prev_p).normalized()
-			# Required for curve connection cases
-			if !norm.is_normalized():
-				norm = norm_prev
-			prev_p = p
-			norm_prev = norm
-			# Offset to center of grid
-			p += Vector3(size.x,0,size.z)/2
-			# Calc points on disc, brute force
-			var c_data = Helpers.gen_disc(p, radius, norm, circ_res)
-			for c_d in range(c_data[0].size()):
-				# Snap to grid, fill
-				var x = int(c_data[0][c_d].x/cell_size)
-				var y = int(c_data[0][c_d].y/cell_size)
-				var z = int(c_data[0][c_d].z/cell_size)
-				grid[cloud_size.x*cloud_size.y*z + cloud_size.x*y + x] = 1
-	# TIMING
-	print("Fill grid: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
-	tim_prev = Time.get_unix_time_from_system()
-
 
 func run_cumpte_shaders():
 	var rd := RenderingServer.create_local_rendering_device()

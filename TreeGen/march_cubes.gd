@@ -158,9 +158,10 @@ func run_cumpte_shaders():
 	print("Pull data: " + str((Time.get_unix_time_from_system() - tim_prev)*1000))
 	tim_prev = Time.get_unix_time_from_system()
 	
-	# HACK Convert to Vec3 arr, this should be direct cast, probably need to change source
+	# HACK Copy to Vec3 arr, this should be direct cast, probably need to change source
 	var out_vertices := vertices_bytes.to_float32_array()
-	var out_normals = normals_bytes.to_float32_array()
+	var out_normals := normals_bytes.to_float32_array()
+	
 	var temp := PackedVector3Array()
 	var temp2 := PackedVector3Array()
 	for i in range(0,size/4,3):

@@ -17,7 +17,7 @@ var radius = 0.2
 var tim_start = Time.get_unix_time_from_system()
 var tim_prev = tim_start
 
-var baked_points = PackedFloat32Array()
+#var baked_points = PackedFloat32Array()
 
 func _ready():
 	var input = PackedVector3Array([Vector3(10,5,7)])
@@ -26,17 +26,17 @@ func _ready():
 	print("Bake interval: " + str(bake_interval))
 	print("Circ res: " + str(circ_res))
 	print("\nTIMING")
-	var curves:Array[Curve3D] = [$Path3D.get_curve(),$Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve(), $Path3D5.get_curve(),$Path3D6.get_curve(),$Path3D7.get_curve()]
+#	var curves:Array[Curve3D] = [$Path3D.get_curve(),$Path3D2.get_curve(), $Path3D3.get_curve(), $Path3D4.get_curve(), $Path3D5.get_curve(),$Path3D6.get_curve(),$Path3D7.get_curve()]
 	
 	# Construct array of baked points to pass to GPU
 #	baked_points.append_array([0,1,0,0])
-	for c in curves.size():
-		curves[c].bake_interval = bake_interval
-		var points = curves[c].get_baked_points()
-		baked_points.append_array([points[0].x, points[0].y, points[0].z, 0])
-		baked_points.append_array([points[-1].x, points[-1].y, points[-1].z, 0])
+#	for c in curves.size():
+#		curves[c].bake_interval = bake_interval
+#		var points = curves[c].get_baked_points()
+#		baked_points.append_array([points[0].x, points[0].y, points[0].z, 0])
+#		baked_points.append_array([points[-1].x, points[-1].y, points[-1].z, 0])
 		
-	run_cumpte_shaders()
+#	run_cumpte_shaders()
 #	point_cloud.construct()
 #	point_cloud2.construct()
 
@@ -69,7 +69,7 @@ func run_cumpte_shaders():
 	size_uniform.add_id(size_buffer)
 
 	# Baked points buffer
-	var b_points_bytes := baked_points.to_byte_array()
+	var b_points_bytes : PackedByteArray = $"../".tree_data.to_byte_array()
 	var b_points_buffer := rd.storage_buffer_create(b_points_bytes.size(), b_points_bytes)
 	var b_points_uniform := RDUniform.new()
 	b_points_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_STORAGE_BUFFER

@@ -16,6 +16,7 @@ layout(set = 0, binding = 1) readonly buffer BakedPoints {
     vec4 baked_points[];
 };
 
+
 layout(set = 0, binding = 2, std430) writeonly buffer SDF {
     float sdf[];
 };
@@ -35,7 +36,7 @@ void main() {
     float min_dist = 1000;
     
     for (int i = 0; i < baked_points.length()-1; i += 2) {
-        float dist = calc_dist(coord_world, baked_points[i].xyz, baked_points[i+1].xyz, 0.3, 0.1);
+        float dist = calc_dist(coord_world, baked_points[i].xyz, baked_points[i+1].xyz, 0.06, 0.06);
         min_dist = min(min_dist, dist);
     }
     // Set SDF dist

@@ -9,12 +9,12 @@ extends Node
 @export var iterations = 1
 @export var axiom = ""
 #@export var map = {}
-#var map = {'X': ">~&@[-FX][+FX]*[-FX][+FX]"}
+var map = {'X': ">~&@[-FX][+FX]*[-FX][+FX]"}
 #var map = {'X': ">Y*Y*Y*Y*Y", 'Y': "~&@[+FX]"}
 #var map = {'X': ">[-FX]+FX"}
 #var map = {'F': ">FF+[+F-F-F]-[-F+F+F]"}
 #var map = {'X': "YF+XF+Y", 'Y': "XF-YF-X"}
-var map = {'X': "F>[~*+FX]F[~/+FX]F"}
+#var map = {'X': "F>[~*+FX]F[~/+FX]F"}
 @export_color_no_alpha var color = Color.WHITE
 @export var width = 5
 
@@ -26,7 +26,8 @@ var stack:Array[Dictionary] = []
 @onready var sequence = axiom
 
 #var lines:Array[Dictionary] = []
-var paths:Array[Path3D] = []
+#var paths:Array[Path3D] = []
+var tree_data = PackedFloat32Array()
 var mesh_root:CSGCombiner3D
 #var mesh_full:Mesh
 
@@ -47,7 +48,9 @@ var top = -1
 var move_draw = func():
 	pos_prev = position
 	position += direction * length
-	paths[current_branch].get_curve().add_point(position)
+	tree_data.append_array([pos_prev.x, pos_prev.y, pos_prev.z, 0])
+	tree_data.append_array([position.x, position.y, position.z, 0])
+#	paths[current_branch].get_curve().add_point(position)
 
 # Rotate branch normal positive
 var re_angle = func():
@@ -80,12 +83,12 @@ var pop = func():
 	stack.remove_at(top)
 	top -= 1
 	
-	current_branch += 1
-	paths.append(Path3D.new())
-	paths[current_branch].set_curve(Curve3D.new())
-	paths[current_branch].get_curve().add_point(pos_prev)
-	if pos_prev != position:
-		paths[current_branch].get_curve().add_point(position)
+#	current_branch += 1
+#	paths.append(Path3D.new())
+#	paths[current_branch].set_curve(Curve3D.new())
+#	paths[current_branch].get_curve().add_point(pos_prev)
+#	if pos_prev != position:
+#		paths[current_branch].get_curve().add_point(position)
 
 # Multiply length by scale factor
 var mult_leng = func():
@@ -140,10 +143,13 @@ func _ready():
 	grow()
 #	print(sequence)
 	construct_path()
-	for p in paths:
+	$Mesh.run_cumpte_shaders()
+#	for p in paths:
+	for p in range(0, tree_data.size(), 4*2):
 		var draw = DebugDraw.new_line_seg(Vector3.ZERO, Color.WHITE)
-		var points = p.get_curve().get_baked_points()
-		draw.add_points(p.get_curve().get_baked_points())
+#		draw.add_points(p.get_curve().get_baked_points())
+		draw.add_point(Vector3(tree_data[p], tree_data[p+1], tree_data[p+2]))
+		draw.add_point(Vector3(tree_data[p+4], tree_data[p+5], tree_data[p+6]))
 		draw.construct()
 #	construct_mesh()
 
@@ -160,9 +166,9 @@ func grow():
 
 # Construct the path based on current stored sequence
 func construct_path():
-	paths.append(Path3D.new())
-	paths[current_branch].set_curve(Curve3D.new())
-	paths[current_branch].get_curve().add_point(position)
+#	paths.append(Path3D.new())
+#	paths[current_branch].set_curve(Curve3D.new())
+#	paths[current_branch].get_curve().add_point(position)
 	
 	for s in sequence:
 		if instruction_map.has(s):

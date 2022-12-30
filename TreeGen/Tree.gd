@@ -168,38 +168,6 @@ func construct_path():
 		if instruction_map.has(s):
 			instruction_map[s].call()
 
-# Construct the mesh based on path 
-func construct_mesh():
-	var polygon = gen_circle(0.01,2)
-	mesh_root = CSGCombiner3D.new()
-	add_child(mesh_root)
-	var i = 1
-	for p in paths:
-		var mesh = CSGPolygon3D.new()
-		mesh.set_mode(CSGPolygon3D.MODE_PATH)
-#		mesh.set_path_interval_type(CSGPolygon3D.PATH_INTERVAL_SUBDIVIDE)
-		mesh.set_path_interval(0.1)
-		# HACK
-		# This should set the node directly but need to change source code to allow
-		add_child(p)
-		mesh.set_path_node(get_child(i).get_path())
-		mesh.set_polygon(polygon)
-		mesh_root.add_child(mesh)
-		i += 1
-
-
-func gen_circle(r:float, res:int):
-	var step = PI/2/res
-	var points:PackedVector2Array
-	
-	var angle = 0
-	for i in range(4*res):
-		points.append(r*Vector2(cos(angle),sin(angle)))
-		angle += step
-		
-	return points
-
-
 # Evolves a symbol to the appropriate symbol/symbol sequence
 func evolve(s):
 	if map.has(s):

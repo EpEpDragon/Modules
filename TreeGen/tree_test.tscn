@@ -22,9 +22,11 @@ mesh = SubResource("BoxMesh_tls7a")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.829147, 0.415169, -0.374367, 0.000992674, 0.668577, 0.743642, 0.559031, -0.61696, 0.553936, 0, 4.27844, 4.80873)
+visible = false
 
 [node name="DirectionalLight3D2" type="DirectionalLight3D" parent="."]
 transform = Transform3D(-0.812122, 0.434445, -0.389507, 0.577123, 0.499752, -0.645892, -0.0859475, -0.749337, -0.656588, 0.769888, 4.27844, 4.80873)
+visible = false
 
 [node name="Tree" type="Node" parent="."]
 script = ExtResource("3_dt4j7")
@@ -32,9 +34,10 @@ scale_factor = 0.62
 len_vari = 0.137
 branch_angle = 25
 rot_angle = 143
-iterations = 4
 axiom = "X"
 width = 2
+
+[node name="Mesh" type="Node3D" parent="Tree"]
 
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="."]
 transform = Transform3D(42.9906, 0, 0, 0, 1, 0, 0, 0, 38.09, 0, 0, 0)

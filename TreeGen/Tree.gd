@@ -1,7 +1,9 @@
 extends Node
 
 @export var length = 1.0
+@export var thickness = 0.5
 @export var scale_factor = 0.4
+@export var thick_factor = 0.6
 @export var len_vari = 0.1
 @export var ang_vari = 0.5
 @export var branch_angle = 20
@@ -9,18 +11,20 @@ extends Node
 @export var iterations = 1
 @export var axiom = ""
 #@export var map = {}
-var map = {'X': ">~&@[-FX][+FX]*[-FX][+FX]"}
+#var map = {'X': ">~&@[-FX][+FX]*[-FX][+FX]"}
 #var map = {'X': ">Y*Y*Y*Y*Y", 'Y': "~&@[+FX]"}
 #var map = {'X': ">[-FX]+FX"}
 #var map = {'F': ">FF+[+F-F-F]-[-F+F+F]"}
 #var map = {'X': "YF+XF+Y", 'Y': "XF-YF-X"}
 #var map = {'X': "F>[~*+FX]F[~/+FX]F"}
+var map = {'X': "F~&>^@*[+X]@*[+X]@*[+X]"}
 @export_color_no_alpha var color = Color.WHITE
 @export var width = 5
 
 var position = Vector3.ZERO
 var direction = Vector3.UP
 var branch_normal = Vector3.FORWARD
+
 var stack:Array[Dictionary] = []
 
 @onready var sequence = axiom
@@ -48,8 +52,8 @@ var top = -1
 var move_draw = func():
 	pos_prev = position
 	position += direction * length
-	tree_data.append_array([pos_prev.x, pos_prev.y, pos_prev.z, 0])
-	tree_data.append_array([position.x, position.y, position.z, 0])
+	tree_data.append_array([pos_prev.x, pos_prev.y, pos_prev.z, thickness])
+	tree_data.append_array([position.x, position.y, position.z, thickness*thick_factor])
 #	paths[current_branch].get_curve().add_point(position)
 
 # Rotate branch normal positive
@@ -70,7 +74,7 @@ var de_rotate = func():
 
 # Push current state, add path for branch
 var push = func():
-	stack.append({"Position":position, "Position_Previous":pos_prev, "Direction":direction, "Branch_Normal":branch_normal, "Length":length})
+	stack.append({"Position":position, "Position_Previous":pos_prev, "Direction":direction, "Branch_Normal":branch_normal, "Length":length, "Thickness":thickness})
 	top += 1
 
 # Pop current state, terminate current path
@@ -80,15 +84,9 @@ var pop = func():
 	direction = stack[top]["Direction"]
 	branch_normal = stack[top]["Branch_Normal"]
 	length = stack[top]["Length"]
+	thickness = stack[top]["Thickness"]
 	stack.remove_at(top)
 	top -= 1
-	
-#	current_branch += 1
-#	paths.append(Path3D.new())
-#	paths[current_branch].set_curve(Curve3D.new())
-#	paths[current_branch].get_curve().add_point(pos_prev)
-#	if pos_prev != position:
-#		paths[current_branch].get_curve().add_point(position)
 
 # Multiply length by scale factor
 var mult_leng = func():
@@ -102,6 +100,12 @@ var div_leng = func():
 var var_leng = func():
 	length *= 1.0+(randf()-0.5)*2*len_vari
 #	length *= 1.0+(randf()-1.0)*2*len_vari
+
+var mult_thickness = func():
+	thickness *= thick_factor
+
+var div_thickness = func():
+	thickness /= thick_factor
 
 # Vary branch normal by random amount
 var var_br_ang = func():
@@ -129,6 +133,8 @@ var instruction_map = {
 				']' : pop,
 				'>' : mult_leng,
 				'<' : div_leng,
+				'^' : mult_thickness,
+				'!' : div_thickness,
 				'~' : var_leng,
 				'&' : var_br_ang,
 				'@' : var_rot,
@@ -161,7 +167,7 @@ func grow():
 		for s in sequence:
 			sequence_temp += evolve(s)
 		sequence = sequence_temp
-	print(sequence)
+#	print(sequence)
 
 
 # Construct the path based on current stored sequence

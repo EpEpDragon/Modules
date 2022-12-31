@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://dn1nk57bh8qgr"]
+[gd_scene load_steps=8 format=3 uid="uid://dn1nk57bh8qgr"]
 
 [ext_resource type="Script" path="res://Camera3D.gd" id="1_70agf"]
 [ext_resource type="Script" path="res://Tree.gd" id="3_dt4j7"]
@@ -7,11 +7,13 @@
 [sub_resource type="Environment" id="Environment_s8fu7"]
 background_mode = 1
 ambient_light_source = 2
-ambient_light_color = Color(0.54902, 0.54902, 0.54902, 1)
+ambient_light_color = Color(0.411765, 0.411765, 0.411765, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_tls7a"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_j4kke"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_4kkf0"]
 
 [node name="Node3D" type="Node3D"]
 
@@ -30,7 +32,9 @@ visible = false
 mesh = SubResource("BoxMesh_tls7a")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.829147, 0.415169, -0.374367, 0.000992674, 0.668577, 0.743642, 0.559031, -0.61696, 0.553936, 0, 4.27844, 4.80873)
+transform = Transform3D(0.283972, 0.441755, -0.851007, 0.0313039, 0.8828, 0.468705, 0.958321, -0.159739, 0.236862, -0.316537, 4.27844, 4.80873)
+shadow_normal_bias = 0.458
+directional_shadow_max_distance = 20.0
 
 [node name="DirectionalLight3D2" type="DirectionalLight3D" parent="."]
 transform = Transform3D(-0.812122, 0.434445, -0.389507, 0.577123, 0.499752, -0.645892, -0.0859475, -0.749337, -0.656588, 0.769888, 4.27844, 4.80873)
@@ -38,10 +42,13 @@ visible = false
 
 [node name="Tree" type="Node" parent="."]
 script = ExtResource("3_dt4j7")
-scale_factor = 0.6
-branch_angle = 30
-rot_angle = 30
-iterations = 5
+length = 1.5
+scale_factor = 0.7
+len_vari = 0.0
+ang_vari = 0.0
+branch_angle = 40
+rot_angle = 120
+iterations = 4
 axiom = "X"
 width = 2
 
@@ -52,3 +59,7 @@ script = ExtResource("3_kv522")
 transform = Transform3D(42.9906, 0, 0, 0, 1, 0, 0, 0, 38.09, 0, 0, 0)
 visible = false
 mesh = SubResource("PlaneMesh_j4kke")
+
+[node name="MeshInstance3D3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+mesh = SubResource("BoxMesh_4kkf0")

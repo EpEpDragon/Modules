@@ -78,7 +78,7 @@ func run_cumpte_shaders():
 	
 	# SDF buffer
 	var sdf := PackedFloat32Array()
-	sdf.resize(cloud_size.x*cloud_size.y*cloud_size.z)
+	sdf.resize(cloud_size.x*cloud_size.y*cloud_size.z*4*4*4)
 	var sdf_bytes := sdf.to_byte_array()
 	var sdf_buffer := rd.storage_buffer_create(sdf_bytes.size(), sdf_bytes)
 	var sdf_uniform := RDUniform.new()
